@@ -16,7 +16,7 @@
 #============================================
 FROM php:8.5-apache AS base
 
-LABEL org.opencontainers.image.source="https://github.com/elciomsantos/sigmon-v1.0"
+LABEL org.opencontainers.image.source="https://github.com/elciomsantos/sigmon"
 LABEL org.opencontainers.image.description="Sistema de Gerenciamento de Cameras e Alarmes"
 LABEL org.opencontainers.image.licenses="MIT"
 

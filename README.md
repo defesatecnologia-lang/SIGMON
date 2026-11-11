@@ -64,8 +64,8 @@ Sistema web para gerenciamento centralizado de câmeras de segurança e centrais
 ### 1. Clonar e instalar dependências
 
 ```bash
-git clone https://github.com/elciomsantos/sigmon-v1.0.git
-cd sigmon-v1.0
+git clone https://github.com/elciomsantos/sigmon.git
+cd sigmon
 
 # Instalar dependências PHP
 composer install
@@ -108,7 +108,7 @@ npm run dev       # Desenvolvimento (Vite dev server em :3000)
 
 ### 5. Iniciar servidor
 
-**Apache (XAMPP):** Acessar `http://localhost/sigmon-v1.0/public/`
+**Apache (XAMPP):** Acessar `http://localhost/sigmon/public/`
 
 **PHP built-in server:**
 ```bash
@@ -158,7 +158,7 @@ VITE_API_URL=http://localhost:80
 ## Estrutura do Projeto
 
 ```
-sigmon-v1.0/
+sigmon/
 ├── accounts/                    # Gestão de usuários
 │   ├── action_*.php            # Handlers de formulário (POST)
 │   ├── cadastroUsuario.php     # Cadastro de usuário

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-BASE_URL="${1:-http://localhost/sigmon-v1.0/public}"
+BASE_URL="${1:-http://localhost/sigmon/public}"
 
 echo "=== Smoke Básico do Sistema ==="
 

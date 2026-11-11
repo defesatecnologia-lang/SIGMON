@@ -180,7 +180,7 @@ de `CREATE TABLE migrations` + `INSERT INTO migrations`).
 
 
 #=====================================================
-suricato@mamute:~/projects/sigmon-v1.0$ 
+suricato@mamute:~/projects/sigmon$ 
 Instalar nates de inicia o docker
 
 sudo snap install docker        

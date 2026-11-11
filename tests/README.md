@@ -5,7 +5,7 @@ Este diretório contém smoke tests básicos de segurança/sessão.
 ## Executar
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tests\smoke_security.ps1 -BaseUrl "http://localhost/sigmon-v1.0/public"
+powershell -ExecutionPolicy Bypass -File .\tests\smoke_security.ps1 -BaseUrl "http://localhost/sigmon/public"
 ```
 
 ## Cobertura inicial
