@@ -45,10 +45,10 @@ DB_PASS=$(openssl rand -base64 32)
 DB_ROOT_PASSWORD=$(openssl rand -base64 32)
 
 # Salvar em local seguro (não no repositório!)
-# Exemplo: /etc/sistema-cameras/.env
+# Exemplo: /etc/sigmon/.env
 
 # Usar no docker-compose
-docker compose --env-file /etc/sistema-cameras/.env up -d
+docker compose --env-file /etc/sigmon/.env up -d
 ```
 
 ### 3. Em CI/CD (GitHub Actions)
@@ -89,16 +89,16 @@ openssl rand -base64 32
 
 | Variável | Descrição | Exemplo |
 |----------|-----------|---------|
-| `CAMERAS_ENV` | Ambiente de execução | `development`, `testing`, `production` |
+| `SIGMON_ENV` | Ambiente de execução | `development`, `testing`, `production` |
 | `DB_HOST` | Host do banco de dados | `localhost`, `db` (Docker) |
 | `DB_NAME` | Nome do banco | `cftv_gml` |
 | `DB_USER` | Usuário do banco | `cftv_user` |
 | `DB_PASS` | Senha do banco | Mínimo 32 caracteres aleatórios |
 | `DB_ROOT_PASSWORD` | Senha root MySQL | Mínimo 32 caracteres aleatórios |
 | `APP_TIMEZONE` | Timezone da aplicação | `America/Sao_Paulo` |
-| `CAMERAS_SESSION_TIMEOUT` | Timeout de sessão (segundos) | `3600` (1 hora) |
-| `CAMERAS_SESSION_ABSOLUTE_TIMEOUT` | Timeout absoluto (segundos) | `28800` (8 horas) |
-| `CAMERAS_CSP_ALLOW_INLINE_STYLES` | Permitir inline CSS | `0` (recomendado), `1` (Bootstrap) |
+| `SIGMON_SESSION_TIMEOUT` | Timeout de sessão (segundos) | `3600` (1 hora) |
+| `SIGMON_SESSION_ABSOLUTE_TIMEOUT` | Timeout absoluto (segundos) | `28800` (8 horas) |
+| `SIGMON_CSP_ALLOW_INLINE_STYLES` | Permitir inline CSS | `0` (recomendado), `1` (Bootstrap) |
 | `APP_PORT` | Porta HTTP | `80` (reverse proxy), `8080` (direto) |
 
 ---

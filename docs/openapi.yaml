@@ -1,6 +1,6 @@
 openapi: "3.0.3"
 info:
-  title: API v2 — Sistema de Gerenciamento de Câmeras e Alarmes
+  title: API v2 — SIGMON (Sistema de Gerenciamento de Câmeras e Alarmes)
   description: |
     API REST do sistema de câmeras e alarmes v1.0. Autenticação por sessão
     (cookie PHPSESSID) com token CSRF. Acesso controlado por perfil:
@@ -12,7 +12,7 @@ info:
     - Rate limiting por IP (GET: 120 req/min; POST: 30 req/min).
   version: "1.0.0"
   contact:
-    name: Sistema de Câmeras
+    name: SIGMON
 servers:
   - url: "/api/v2"
 security:

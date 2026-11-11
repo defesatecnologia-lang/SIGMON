@@ -1,6 +1,6 @@
 {
-  "name": "Sistema de Gerenciamento de Câmeras e Alarmes",
-  "short_name": "CFTV GML",
+  "name": "SIGMON — Sistema de Gerenciamento de Câmeras e Alarmes",
+  "short_name": "SIGMON",
   "description": "Sistema de monitoramento e gerenciamento de câmeras de segurança e alarmes",
   "start_url": "./index.php?page=login",
   "display": "standalone",

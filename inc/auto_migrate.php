@@ -10,7 +10,8 @@ declare(strict_types=1);
  * reutilizavel de database/runner.php.
  *
  * Gate (desativacao opcional em producao via ENV):
- *   - CAMERAS_AUTO_MIGRATE=0  -> desativa completamente o auto-runner.
+ *   - SIGMON_AUTO_MIGRATE=0    -> desativa completamente o auto-runner.
+ *     (fallback legado: CAMERAS_AUTO_MIGRATE=0)
  *   - Padrao (ausente ou !=0)  -> ativo.
  *
  * Concorrencia:
@@ -40,7 +41,11 @@ function runAutoMigrate(): void
         define('MIGRATE_LOCK_NAME', 'cftv_migrate');
     }
 
-    if (getenv('CAMERAS_AUTO_MIGRATE') === '0') {
+    $autoMigrate = getenv('SIGMON_AUTO_MIGRATE');
+    if ($autoMigrate === false || $autoMigrate === '') {
+        $autoMigrate = getenv('CAMERAS_AUTO_MIGRATE');
+    }
+    if ($autoMigrate === '0') {
         return;
     }
 

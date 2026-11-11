@@ -1,5 +1,5 @@
 param(
-    [string]$BaseUrl = "http://localhost/sistema-cameras-v1.0/public"
+    [string]$BaseUrl = "http://localhost/sigmon-v1.0/public"
 )
 
 $ErrorActionPreference = "Stop"

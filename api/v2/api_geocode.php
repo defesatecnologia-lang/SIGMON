@@ -21,7 +21,7 @@ try {
                 CURLOPT_TIMEOUT => 12,
                 CURLOPT_CONNECTTIMEOUT => 5,
                 CURLOPT_HTTPHEADER => ['Accept: application/json'],
-                CURLOPT_USERAGENT => 'sistema-cameras/1.0',
+                CURLOPT_USERAGENT => 'sigmon/1.0',
                 CURLOPT_SSL_VERIFYPEER => true,
                 CURLOPT_SSL_VERIFYHOST => 2,
             ]);
@@ -41,7 +41,7 @@ try {
             'http' => [
                 'method' => 'GET',
                 'timeout' => 12,
-                'header' => "Accept: application/json\r\nUser-Agent: sistema-cameras/1.0\r\n"
+                'header' => "Accept: application/json\r\nUser-Agent: sigmon/1.0\r\n"
             ]
         ]);
         $raw = file_get_contents($url, false, $context);

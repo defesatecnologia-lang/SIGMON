@@ -4,7 +4,7 @@
 <footer class="footer mt-auto py-3 bg-light">
     <div class="container text-center">
         <span class="text-muted">
-            Sistema de Gerenciamento de Cameras e Alarmes &copy; <?php echo date('Y'); ?> -
+            SIGMON — Sistema de Gerenciamento de Cameras e Alarmes &copy; <?php echo date('Y'); ?> -
             <span class="developer-name">Beta +</span>
         </span>
     </div>

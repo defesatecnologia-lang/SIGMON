@@ -19,7 +19,7 @@ RUN npm run build
 # ============================================
 FROM php:8.4-fpm
 
-LABEL org.opencontainers.image.source="https://github.com/elciomsantos/sistema-cameras-v1.0"
+LABEL org.opencontainers.image.source="https://github.com/elciomsantos/sigmon-v1.0"
 LABEL org.opencontainers.image.description="Sistema de Gerenciamento de Cameras e Alarmes (Nginx)"
 LABEL org.opencontainers.image.licenses="MIT"
 
@@ -91,7 +91,7 @@ RUN mkdir -p storage/ratelimit storage/cep_cache public/uploads \
     && chown -R www-data:www-data storage public/uploads \
     && chmod -R 755 storage public/uploads
 
-ENV CAMERAS_ENV=production
+ENV SIGMON_ENV=production
 
 # Remover default do Nginx (evitar conflito)
 RUN rm -f /etc/nginx/sites-enabled/default \

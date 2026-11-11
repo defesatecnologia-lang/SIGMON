@@ -1,6 +1,6 @@
 <?php
 /**
- * Migration runner for sistema-cameras
+ * Migration runner for sigmon
  * Executes pending migrations in order
  */
 

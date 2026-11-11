@@ -120,7 +120,7 @@ jobs:
           context: .
           file: docker/Dockerfile.nginx
           load: true
-          tags: sistema-cameras:ci
+          tags: sigmon:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -149,7 +149,7 @@ jobs:
           context: .
           file: docker/Dockerfile.nginx
           load: true
-          tags: sistema-cameras:prod-scan
+          tags: sigmon:prod-scan
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -157,7 +157,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: 'image'
-          scan-ref: 'sistema-cameras:prod-scan'
+          scan-ref: 'sigmon:prod-scan'
           format: 'sarif'
           output: 'trivy-image.sarif'
           severity: 'CRITICAL,HIGH'

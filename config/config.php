@@ -52,16 +52,35 @@ function loadEnvFile(string $envPath): bool
 
 function getEnvPath(): string
 {
-    $os = PHP_OS_FAMILY;
-    if ($os === 'Windows') {
-        return 'C:\env\sistema-cameras\.env';
+    // Caminho customizado via ENV (util em containers/servidores).
+    $custom = getenv('SIGMON_ENV_FILE');
+    if ($custom !== false && $custom !== '') {
+        return $custom;
     }
-    return '/etc/sistema-cameras/.env';
+
+    $os = PHP_OS_FAMILY;
+    $candidates = $os === 'Windows'
+        ? ['C:\env\sigmon\.env', 'C:\env\sistema-cameras\.env']
+        : ['/etc/sigmon/.env', '/etc/sistema-cameras/.env'];
+
+    foreach ($candidates as $candidate) {
+        if (is_file($candidate)) {
+            return $candidate;
+        }
+    }
+
+    // Nenhum arquivo existe ainda: retorna o caminho canonico novo.
+    return $candidates[0];
 }
 
 function getCameraEnv(): string
 {
-    return getenv('CAMERAS_ENV') ?: 'development';
+    // Prefixo novo SIGMON_ENV com fallback para o legado CAMERAS_ENV.
+    $value = getenv('SIGMON_ENV');
+    if ($value === false || $value === '') {
+        $value = getenv('CAMERAS_ENV');
+    }
+    return ($value === false || $value === '') ? 'development' : $value;
 }
 
 function isProduction(): bool

@@ -88,7 +88,7 @@ setup_database() {
     fi
 
     # Apply development seed (only in dev environment)
-    if [ "${CAMERAS_ENV:-development}" = "development" ]; then
+    if [ "${SIGMON_ENV:-${CAMERAS_ENV:-development}}" = "development" ]; then
         SEED_FILE="config/DB/private/seed_dev.sql"
         if [ -f "$SEED_FILE" ]; then
             log "Aplicando seed de desenvolvimento..."

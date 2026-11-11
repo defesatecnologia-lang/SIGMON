@@ -3,9 +3,9 @@
  * v5 - Lê sw-assets.json pós-build para pré-cachear assets Vite com hash
  */
 
-const CACHE_NAME = 'cameras-app-v8';
-const API_CACHE = 'cameras-api-v8';
-const ASSETS_CACHE = 'cameras-assets-v8';
+const CACHE_NAME = 'sigmon-app-v8';
+const API_CACHE = 'sigmon-api-v8';
+const ASSETS_CACHE = 'sigmon-assets-v8';
 
 let BASE_URL = '';
 
@@ -146,7 +146,7 @@ self.addEventListener('push', event => {
     vibrate: [100, 50, 100],
     data: { dateOfArrival: Date.now(), primaryKey: 1 }
   };
-  event.waitUntil(self.registration.showNotification('Sistema de Câmeras', options));
+  event.waitUntil(self.registration.showNotification('SIGMON', options));
 });
 
 self.addEventListener('notificationclick', event => {

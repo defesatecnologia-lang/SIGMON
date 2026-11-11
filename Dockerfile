@@ -1,5 +1,5 @@
 # ============================================
-# Sistema de Gerenciamento de Cameras e Alarmes
+# SIGMON — Sistema de Gerenciamento de Cameras e Alarmes
 # Dockerfile multi-stage: dev (Apache) e prod (Apache self-contained)
 #============================================
 # DEV  (target: dev)     -> apenas PHP+Apache+composer, codigo via bind mount
@@ -7,7 +7,7 @@
 #
 #Uso:
 #  Dev:  docker compose up -d            (usa target: dev do compose)
-#  Prod: docker build --target prod -t sistema-cameras:prod .
+#  Prod: docker build --target prod -t sigmon:prod .
 #============================================
 
 
@@ -16,7 +16,7 @@
 #============================================
 FROM php:8.5-apache AS base
 
-LABEL org.opencontainers.image.source="https://github.com/elciomsantos/sistema-cameras-v1.0"
+LABEL org.opencontainers.image.source="https://github.com/elciomsantos/sigmon-v1.0"
 LABEL org.opencontainers.image.description="Sistema de Gerenciamento de Cameras e Alarmes"
 LABEL org.opencontainers.image.licenses="MIT"
 
@@ -56,7 +56,7 @@ RUN echo "memory_limit = 256M" > /usr/local/etc/php/conf.d/memory.ini \
 # DocumentRoot em /var/www/html/public.
 RUN a2dissite 000-default \
     && printf '<VirtualHost *:80>\n\
-    ServerName sistema-cameras.local\n\
+    ServerName sigmon.local\n\
     DocumentRoot /var/www/html/public\n\
     <Directory /var/www/html/public>\n\
         Options -Indexes +FollowSymLinks\n\
@@ -91,7 +91,7 @@ RUN pecl install xdebug 2>/dev/null \
 COPY docker/dev-entrypoint.sh /usr/local/bin/dev-entrypoint.sh
 RUN chmod +x /usr/local/bin/dev-entrypoint.sh
 
-ENV CAMERAS_ENV=development
+ENV SIGMON_ENV=development
 
 # Roda como www-data — entrypoint ajusta ownership quando preciso
 CMD ["dev-entrypoint.sh"]
@@ -137,7 +137,7 @@ RUN mkdir -p storage/ratelimit storage/cep_cache public/uploads \
     && chown -R www-data:www-data storage public/uploads \
     && chmod -R 755 storage public/uploads
 
-ENV CAMERAS_ENV=production
+ENV SIGMON_ENV=production
 
 USER www-data
 

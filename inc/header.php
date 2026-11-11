@@ -11,7 +11,7 @@
     <link rel="icon" type="image/png" sizes="512x512" href="<?= htmlspecialchars($APP_BASE_PATH ?? '', ENT_QUOTES, 'UTF-8') ?>/images/android-chrome-512x512.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="<?= htmlspecialchars($APP_BASE_PATH ?? '', ENT_QUOTES, 'UTF-8') ?>/images/android-chrome-192x192.png" />
 
-    <title>Sistema de Gerenciamento de Cameras e Alarmes</title>
+    <title>SIGMON — Sistema de Gerenciamento de Cameras e Alarmes</title>
 <?php
     $bootstrapCss = vite_bootstrap_css();
 if ($bootstrapCss) : ?>

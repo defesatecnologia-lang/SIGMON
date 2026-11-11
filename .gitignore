@@ -1,5 +1,6 @@
 # Environment - BLOQUEADO (usar .env.example como template)
-# Configurar em: C:\env\sistema-cameras\.env (Windows) ou /etc/sistema-cameras/.env (Linux)
+# Configurar em: C:\env\sigmon\.env (Windows) ou /etc/sigmon/.env (Linux)
+# (caminhos legados ainda suportados: C:\env\sistema-cameras\.env e /etc/sistema-cameras/.env)
 .env
 .env.*
 !.env.example

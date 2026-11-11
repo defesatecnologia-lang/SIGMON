@@ -1,4 +1,4 @@
-# Sistema de Gerenciamento de Câmeras e Alarmes v1.0
+# SIGMON — Sistema de Gerenciamento de Câmeras e Alarmes v1.0
 
 Sistema web para gerenciamento centralizado de câmeras de segurança e centrais de alarme em ambientes empresariais. Controle de equipamentos, manutenções, relatórios e geolocalização com autenticação hierárquica e API REST.
 
@@ -64,8 +64,8 @@ Sistema web para gerenciamento centralizado de câmeras de segurança e centrais
 ### 1. Clonar e instalar dependências
 
 ```bash
-git clone https://github.com/elciomsantos/sistema-cameras-v1.0.git
-cd sistema-cameras-v1.0
+git clone https://github.com/elciomsantos/sigmon-v1.0.git
+cd sigmon-v1.0
 
 # Instalar dependências PHP
 composer install
@@ -80,17 +80,17 @@ O sistema carrega configurações de uma pasta externa por segurança:
 
 **Windows (XAMPP):**
 ```powershell
-New-Item -ItemType Directory -Path "C:\env\sistema-cameras" -Force
-Copy-Item ".env.example" "C:\env\sistema-cameras\.env"
-# Editar C:\env\sistema-cameras\.env com credenciais do banco
+New-Item -ItemType Directory -Path "C:\env\sigmon" -Force
+Copy-Item ".env.example" "C:\env\sigmon\.env"
+# Editar C:\env\sigmon\.env com credenciais do banco
 ```
 
 **Linux:**
 ```bash
-sudo mkdir -p /etc/sistema-cameras
-sudo cp .env.example /etc/sistema-cameras/.env
-sudo chown -R www-data:www-data /etc/sistema-cameras
-sudo chmod 700 /etc/sistema-cameras
+sudo mkdir -p /etc/sigmon
+sudo cp .env.example /etc/sigmon/.env
+sudo chown -R www-data:www-data /etc/sigmon
+sudo chmod 700 /etc/sigmon
 ```
 
 ### 3. Importar banco de dados
@@ -108,7 +108,7 @@ npm run dev       # Desenvolvimento (Vite dev server em :3000)
 
 ### 5. Iniciar servidor
 
-**Apache (XAMPP):** Acessar `http://localhost/sistema-cameras-v1.0/public/`
+**Apache (XAMPP):** Acessar `http://localhost/sigmon-v1.0/public/`
 
 **PHP built-in server:**
 ```bash
@@ -122,7 +122,7 @@ php -S localhost:8080 -t public/
 
 ```env
 # Ambiente: development, testing, production
-CAMERAS_ENV=development
+SIGMON_ENV=development
 
 # Banco de Dados
 DB_HOST=localhost
@@ -140,20 +140,25 @@ APP_ALLOWED_ORIGINS=
 APP_TIMEZONE=America/Sao_Paulo
 
 # Sessão (segundos)
-CAMERAS_SESSION_TIMEOUT=3600
-CAMERAS_SESSION_ABSOLUTE_TIMEOUT=28800
+SIGMON_SESSION_TIMEOUT=3600
+SIGMON_SESSION_ABSOLUTE_TIMEOUT=28800
 
 # CSP (0=strict, 1=permite inline styles p/ Bootstrap)
-CAMERAS_CSP_ALLOW_INLINE_STYLES=0
+SIGMON_CSP_ALLOW_INLINE_STYLES=0
 
 # Vite Dev Server: URL base da API para o proxy
 VITE_API_URL=http://localhost:80
 ```
 
+> **Compatibilidade:** o prefixo `SIGMON_*` substitui o antigo `CAMERAS_*`, e o
+> arquivo de configuração passou a ser `/etc/sigmon/.env` (Linux) ou
+> `C:\env\sigmon\.env` (Windows). Os nomes/paths antigos (`CAMERAS_*` e
+> `/etc/sistema-cameras/.env`) continuam funcionando como fallback.
+
 ## Estrutura do Projeto
 
 ```
-sistema-cameras-v1.0/
+sigmon-v1.0/
 ├── accounts/                    # Gestão de usuários
 │   ├── action_*.php            # Handlers de formulário (POST)
 │   ├── cadastroUsuario.php     # Cadastro de usuário
@@ -360,9 +365,9 @@ A hierarquia é cumulativa: `admin > supervisor > user`. Usuários com nível su
 
 ### Boas Práticas em Produção
 
-1. Definir `CAMERAS_ENV=production`
-2. Habilitar `CAMERAS_FORCE_HTTPS_SESSION=1`
-3. Configurar `CAMERAS_CSP_ALLOW_INLINE_STYLES=0`
+1. Definir `SIGMON_ENV=production`
+2. Habilitar `SIGMON_FORCE_HTTPS_SESSION=1`
+3. Configurar `SIGMON_CSP_ALLOW_INLINE_STYLES=0`
 4. Usar HTTPS com HSTS
 5. Configurar `APP_ALLOWED_ORIGINS` para CORS
 6. Manter `.env` fora do repositório
@@ -520,7 +525,7 @@ npm install && npm run build
 
 Passos para nova implantação:
 1. `mysql -u root -p < config/DB/cftv_gml.sql` — importa schema completo (com todos os objetos: índices, triggers, procedures, eventos, partições e tabela `migrations` já populada)
-2. Copiar `.env.example` → configurar credenciais em `C:\env\sistema-cameras\.env` (Windows) ou `/etc/sistema-cameras/.env` (Linux)
+2. Copiar `.env.example` → configurar credenciais em `C:\env\sigmon\.env` (Windows) ou `/etc/sigmon/.env` (Linux)
 3. `composer install` — dependências PHP
 4. `npm install && npm run build` — build frontend (Vite + Brotli + Font Awesome self-host + webfonts)
 5. `php database/migrate.php --status` — confirma que não há migrations pendentes (`Total: 0 | Applied: 14 | Pending: 0`)

@@ -9,6 +9,8 @@
 #  docker compose logs -f app
 #  docker compose down
 #============================================
+name: sigmon
+
 services:
   db:
     image: mysql:8.0
@@ -38,7 +40,7 @@ services:
     restart: unless-stopped
     network_mode: host
     environment:
-      CAMERAS_ENV: development
+      SIGMON_ENV: development
       # network_mode: host -> DB acessivel em 127.0.0.1:3306 (nao por nome DNS)
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
@@ -46,10 +48,10 @@ services:
       DB_USER: ${DB_USER:-cftv_user}
       DB_PASS: ${DB_PASS:-cftv_pass}
       APP_TIMEZONE: America/Sao_Paulo
-      CAMERAS_SESSION_TIMEOUT: 3600
-      CAMERAS_SESSION_ABSOLUTE_TIMEOUT: 28800
+      SIGMON_SESSION_TIMEOUT: 3600
+      SIGMON_SESSION_ABSOLUTE_TIMEOUT: 28800
       # Em dev, permitir inline styles para evitar quebrar Bootstrap
-      CAMERAS_CSP_ALLOW_INLINE_STYLES: 1
+      SIGMON_CSP_ALLOW_INLINE_STYLES: 1
     volumes:
       # Bind mount do codigo-fonte — mudancas refletem sem rebuild
       - ./:/var/www/html

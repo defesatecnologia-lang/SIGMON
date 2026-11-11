@@ -55,7 +55,7 @@ Levantado a partir de `composer.json`, `package.json`, `Dockerfile`, `docker-com
 | Tags / releases | Nenhuma tag encontrada |
 | Último commit | `0838504` — "chore: atualizacoes diversas" (2026-07-18) |
 | Período ativo | Julho 2026 (intenso) — alta frequência de commits 2026-07-09 a 2026-07-18 |
-| Autores | `elciomsantos`, `Developer <dev@sistema-cameras.local>` |
+| Autores | `elciomsantos`, `Developer <dev@sigmon.local>` |
 
 **Análise de hotspots (evidência nos commits):**
 - `config/DB/cftv_gml.sql` e `config/database.php` — vários commits de schema/trigger/perf.
@@ -135,7 +135,7 @@ Defesas já verificadas em código:
 - Senhas Argon2id com auto-rehash de bcrypt legado; validação de política de senha.
 - Upload: `finfo` MIME + magic-bytes + reprocessamento GD + nomes hasheados + limites.
 - CSP nonce-based; headers de segurança (nosniff, frame-options, referrer, permissions, HSTS).
-- Secrets fora do repo (`/etc/sistema-cameras/.env` / `C:\env\...`).
+- Secrets fora do repo (`/etc/sigmon/.env` / `C:\env\...`).
 
 Pendências de segurança a validar na Fase 6 (não confirmadas nesta fase):
 - CSRF nos endpoints de escrita via header `X-CSRF-Token` (confirmar cobertura 100%).
@@ -209,8 +209,8 @@ Cache atual: APCu (dashboard 60s, lookups 300s, endpoints 30-60s), HTTP Cache-Co
 
 ## 13. Variáveis de Ambiente (config/)
 
-- Carregadas de arquivo externo (`/etc/sistema-cameras/.env` ou `C:\env\sistema-cameras\.env`), com exceção quando já definidas (Docker).
-- Chaves: `CAMERAS_ENV`, `DB_HOST/NAME/USER/PASS`, `DB_SSL_CA`, `PROXY_TRUSTED_IPS`, `APP_ALLOWED_ORIGINS`, `APP_TIMEZONE`, `CAMERAS_SESSION_TIMEOUT`, `CAMERAS_SESSION_ABSOLUTE_TIMEOUT`, `ARGON2_*`, `BCRYPT_COST`, `SENTRY_DSN`, `CAMERAS_CSP_ALLOW_INLINE_STYLES`, `VITE_API_URL`.
+- Carregadas de arquivo externo (`/etc/sigmon/.env` ou `C:\env\sigmon\.env`), com exceção quando já definidas (Docker).
+- Chaves: `SIGMON_ENV`, `DB_HOST/NAME/USER/PASS`, `DB_SSL_CA`, `PROXY_TRUSTED_IPS`, `APP_ALLOWED_ORIGINS`, `APP_TIMEZONE`, `SIGMON_SESSION_TIMEOUT`, `SIGMON_SESSION_ABSOLUTE_TIMEOUT`, `ARGON2_*`, `BCRYPT_COST`, `SENTRY_DSN`, `SIGMON_CSP_ALLOW_INLINE_STYLES`, `VITE_API_URL`.
 - `config/DB/private/inserts-proprios.sql` e `seed_dev.sql` presentes (dados sensíveis/proprietários — não analisados nesta fase).
 
 ---

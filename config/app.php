@@ -3,25 +3,34 @@
 function appEnv(string $key, ?string $default = null): ?string
 {
     $value = getenv($key);
-    if ($value === false || $value === '') {
-        return $default;
+    if ($value !== false && $value !== '') {
+        return $value;
     }
-    return $value;
+
+    // Compat: SIGMON_X aceita fallback para o legado CAMERAS_X.
+    if (str_starts_with($key, 'SIGMON_')) {
+        $legacyValue = getenv('CAMERAS_' . substr($key, 7));
+        if ($legacyValue !== false && $legacyValue !== '') {
+            return $legacyValue;
+        }
+    }
+
+    return $default;
 }
 
 if (!defined('SESSION_TIMEOUT')) {
-    define('SESSION_TIMEOUT', (int) appEnv('CAMERAS_SESSION_TIMEOUT', '3600'));
+    define('SESSION_TIMEOUT', (int) appEnv('SIGMON_SESSION_TIMEOUT', '3600'));
 }
 if (!defined('SESSION_ABSOLUTE_TIMEOUT')) {
-    define('SESSION_ABSOLUTE_TIMEOUT', (int) appEnv('CAMERAS_SESSION_ABSOLUTE_TIMEOUT', '28800'));
+    define('SESSION_ABSOLUTE_TIMEOUT', (int) appEnv('SIGMON_SESSION_ABSOLUTE_TIMEOUT', '28800'));
 }
 if (!defined('ENVIRONMENT')) {
-    define('ENVIRONMENT', appEnv('CAMERAS_ENV', 'development'));
+    define('ENVIRONMENT', appEnv('SIGMON_ENV', 'development'));
 }
 
 function isHttpsRequest(): bool
 {
-    $force = appEnv('CAMERAS_FORCE_HTTPS_SESSION');
+    $force = appEnv('SIGMON_FORCE_HTTPS_SESSION');
     if ($force !== null) {
         return (bool)(int)$force;
     }

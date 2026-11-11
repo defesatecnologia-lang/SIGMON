@@ -13,7 +13,7 @@ declare(strict_types=1);
  *
  * Sentry is automatically disabled if:
  * - SENTRY_DSN is not set
- * - CAMERAS_ENV is not 'production'
+ * - SIGMON_ENV (fallback legado: CAMERAS_ENV) is not 'production'
  */
 
 use Sentry\Breadcrumb;
@@ -31,7 +31,7 @@ function initSentry(): void
     $options = [
         'dsn' => $dsn,
         'environment' => getCameraEnv(),
-        'release' => 'sistema-cameras@1.0',
+        'release' => 'sigmon@1.0',
         'attach_stacktrace' => true,
         'send_default_pii' => false,
         'traces_sample_rate' => 0.1,

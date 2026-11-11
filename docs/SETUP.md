@@ -10,11 +10,11 @@ build frontend (Vite).
 
 ```
 DESENVOLVIMENTO (Windows + WSL2 - LINUX)
-└── C:\env\sistema-cameras\
+└── C:\env\sigmon\
     └── .env
 
 PRODUÇÃO (Linux)
-└── /etc/sistema-cameras/
+└── /etc/sigmon/
     └── .env
 ```
 
@@ -39,19 +39,19 @@ PRODUÇÃO (Linux)
 
 ```bash
 # 1) Clone o repositório
-git clone <repo-url> sistema-cameras
-cd sistema-cameras
+git clone <repo-url> sigmon
+cd sigmon
 
 # 2) Crie a pasta externa de configuração
-sudo mkdir -p /etc/sistema-cameras
-sudo chown www-data:www-data /etc/sistema-cameras
-sudo chmod 700 /etc/sistema-cameras
+sudo mkdir -p /etc/sigmon
+sudo chown www-data:www-data /etc/sigmon
+sudo chmod 700 /etc/sigmon
 
 # 3) Copie e edite o .env
-sudo cp .env.example /etc/sistema-cameras/.env
-sudo chown www-data:www-data /etc/sistema-cameras/.env
-sudo chmod 600 /etc/sistema-cameras/.env
-sudo nano /etc/sistema-cameras/.env   # preencha credenciais
+sudo cp .env.example /etc/sigmon/.env
+sudo chown www-data:www-data /etc/sigmon/.env
+sudo chmod 600 /etc/sigmon/.env
+sudo nano /etc/sigmon/.env   # preencha credenciais
 
 # 4) Instale dependências PHP
 composer install --no-interaction --prefer-dist
@@ -76,7 +76,7 @@ fi
 sudo systemctl restart apache2
 ```
 
-Acesse: `http://sistema-cameras.local`
+Acesse: `http://sigmon.local`
 
 ---
 
@@ -84,13 +84,13 @@ Acesse: `http://sistema-cameras.local`
 
 ```powershell
 # 1) Crie a pasta externa de configuração
-New-Item -ItemType Directory -Path "C:\env\sistema-cameras" -Force
+New-Item -ItemType Directory -Path "C:\env\sigmon" -Force
 
 # 2) Copie o .env.example
-Copy-Item ".env.example" "C:\env\sistema-cameras\.env"
+Copy-Item ".env.example" "C:\env\sigmon\.env"
 
 # 3) Edite com as credenciais locais
-notepad "C:\env\sistema-cameras\.env"
+notepad "C:\env\sigmon\.env"
 
 # 4) Instale dependências
 composer install
@@ -114,15 +114,15 @@ display_errors = On
 ## 5. Variáveis do `.env`
 
 ```env
-CAMERAS_ENV=development                  # development | production
+SIGMON_ENV=development                  # development | production
 DB_HOST=localhost
 DB_NAME=cftv_gml
 DB_USER=seu_usuario
 DB_PASS=sua_senha_forte
 APP_TIMEZONE=America/Sao_Paulo
-CAMERAS_SESSION_TIMEOUT=3600             # segundos de inatividade
-CAMERAS_SESSION_ABSOLUTE_TIMEOUT=28800   # 8h — expiração absoluta
-CAMERAS_CSP_ALLOW_INLINE_STYLES=0        # mantenha 0 (CSP estrita)
+SIGMON_SESSION_TIMEOUT=3600             # segundos de inatividade
+SIGMON_SESSION_ABSOLUTE_TIMEOUT=28800   # 8h — expiração absoluta
+SIGMON_CSP_ALLOW_INLINE_STYLES=0        # mantenha 0 (CSP estrita)
 ```
 
 ---
@@ -130,8 +130,8 @@ CAMERAS_CSP_ALLOW_INLINE_STYLES=0        # mantenha 0 (CSP estrita)
 ## 6. Solução de Problemas
 
 ### "Arquivo de configuração não encontrado"
-- Windows: confirme `C:\env\sistema-cameras\.env`
-- Linux: `ls -l /etc/sistema-cameras/.env` (permissão `600`)
+- Windows: confirme `C:\env\sigmon\.env`
+- Linux: `ls -l /etc/sigmon/.env` (permissão `600`)
 
 ### "Configurações ausentes: DB_PASS"
 O `.env` existe mas não contém a variável `DB_PASS`. Adicione a linha.
@@ -160,8 +160,8 @@ de `CREATE TABLE migrations` + `INSERT INTO migrations`).
 - **Nunca** commite arquivos `.env`
 - **Nunca** coloque credenciais no código
 - Use senhas fortes (mínimo 32 caracteres)
-- Em produção, defina `CAMERAS_ENV=production`
-- Permissões restritivas: `chmod 600 /etc/sistema-cameras/.env`
+- Em produção, defina `SIGMON_ENV=production`
+- Permissões restritivas: `chmod 600 /etc/sigmon/.env`
 - Em produção, ative OPcache — valide com `php scripts/check-opcache.php`
   (exit 1 se OPcache estiver OFF)
 
@@ -180,7 +180,7 @@ de `CREATE TABLE migrations` + `INSERT INTO migrations`).
 
 
 #=====================================================
-suricato@mamute:~/projects/sistema-cameras-v1.0$ 
+suricato@mamute:~/projects/sigmon-v1.0$ 
 Instalar nates de inicia o docker
 
 sudo snap install docker        

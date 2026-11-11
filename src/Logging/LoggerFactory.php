@@ -55,7 +55,7 @@ class LoggerFactory
         $paths = [
             defined('APP_ROOT') ? APP_ROOT . '/storage/logs' : null,
             dirname(__DIR__, 2) . '/storage/logs',
-            sys_get_temp_dir() . '/sistema-cameras/logs',
+            sys_get_temp_dir() . '/sigmon/logs',
         ];
 
         foreach ($paths as $path) {

@@ -58,7 +58,7 @@ try {
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_HTTPHEADER => ['Accept: application/json'],
-            CURLOPT_USERAGENT => 'sistema-cameras/1.0'
+            CURLOPT_USERAGENT => 'sigmon/1.0'
         ]);
         $raw = curl_exec($ch);
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -72,7 +72,7 @@ try {
             'http' => [
                 'method' => 'GET',
                 'timeout' => 10,
-                'header' => "Accept: application/json\r\nUser-Agent: sistema-cameras/1.0\r\n"
+                'header' => "Accept: application/json\r\nUser-Agent: sigmon/1.0\r\n"
             ]
         ]);
         $raw = file_get_contents($url, false, $context);

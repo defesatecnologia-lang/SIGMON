@@ -25,7 +25,7 @@ if [ ! -s "$CERT_FILE" ] || [ ! -s "$KEY_FILE" ]; then
     echo "[entrypoint] Nenhum certificado em $CERT_DIR — gerando self-signed (substitua por CA interna se necessario)."
     openssl req -x509 -nodes -newkey rsa:2048 -days 825 \
         -keyout "$KEY_FILE" -out "$CERT_FILE" \
-        -subj "/C=BR/O=Sistema Cameras e Alarmes/CN=sistema-cameras" \
+        -subj "/C=BR/O=Sistema Cameras e Alarmes/CN=sigmon" \
         >/dev/null 2>&1
     chmod 600 "$KEY_FILE"
     chmod 644 "$CERT_FILE"

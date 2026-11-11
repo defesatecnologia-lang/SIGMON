@@ -62,7 +62,7 @@ if ($isSwaggerSpec || $isSwaggerJson) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>API Swagger UI - Sistema de Câmeras</title>
+    <title>API Swagger UI - SIGMON</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="<?= rtrim((defined('BASE_URL') ? BASE_URL : '/'), '/') ?>/assets/swagger/swagger-ui.css">
@@ -101,7 +101,7 @@ if ($isSwaggerSpec || $isSwaggerJson) {
 <body>
     <div class="topbar">
         <div class="topbar-container">
-            <h1>📹 Sistema de Câmeras - API v2</h1>
+            <h1>📹 SIGMON - API v2</h1>
             <p>Documentação interativa e testes de endpoints</p>
         </div>
     </div>

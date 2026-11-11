@@ -1,5 +1,5 @@
 param(
-    [string]$BaseUrl = 'http://localhost/sistema-cameras-v1.0/public/index.php',
+    [string]$BaseUrl = 'http://localhost/sigmon-v1.0/public/index.php',
     [string]$DbName = 'cftv_gml',
     [string]$DbUser = 'root',
     [string]$MysqlPath = 'C:\xampp\mysql\bin\mysql.exe',

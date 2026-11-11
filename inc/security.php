@@ -417,7 +417,7 @@ function writeAuditLog(string $entidade, ?int $entidadeId, string $operacao, ?ar
     try {
         $logDir = defined('AUDIT_LOG_DIR') ? AUDIT_LOG_DIR : (ini_get('error_log') ? dirname(ini_get('error_log')) : sys_get_temp_dir());
         if (strpos(str_replace('\\', '/', realpath($logDir) ?: $logDir), str_replace('\\', '/', APP_ROOT . '/public')) === 0) {
-            $logDir = sys_get_temp_dir() . '/sistema-cameras-audit';
+            $logDir = sys_get_temp_dir() . '/sigmon-audit';
         }
         if (!is_dir($logDir)) {
             @mkdir($logDir, 0700, true);

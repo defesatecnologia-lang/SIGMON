@@ -1,6 +1,6 @@
 {
-    "name": "gml/sistema-cameras",
-    "description": "Sistema de Gerenciamento de Câmeras de Segurança",
+    "name": "gml/sigmon",
+    "description": "SIGMON - Sistema de Gerenciamento de Câmeras de Segurança",
     "license": "proprietary",
     "type": "project",
     "require": {
