@@ -4,10 +4,15 @@
 -- ATENCAO: Nao utilizar em producao!
 -- Gere credenciais unicas e fortes para cada ambiente.
 --
+-- Idempotente: pode ser aplicado sobre um banco ja inicializado
+-- pelo config/DB/cftv_gml.sql (que tambem cria admin/supervisor/usuario)
+-- sem erro de chave duplicada. As contas de dev ficam sem troca
+-- obrigatoria de senha (senha_temporaria = 0).
+--
 -- Senhas padrao (DEV apenas):
---   admin     -> admin@123
---   supervisor ->  admin@123
---   user      ->   admin@123
+--   admin      -> admin@123
+--   supervisor -> admin@123
+--   usuario    -> admin@123
 -- =====================================================
 
 -- Substitua pela sua senha de banco local
@@ -21,4 +26,10 @@
 INSERT INTO usuarios (nome, usuario, senha, nivel_acesso_id, secretaria_id, senha_temporaria, ativo) VALUES
 ('Administrador Sistema','admin','$2y$12$3.lPsNIBYzzIJ3ZqVIOtAOZ47d/qo4qf2CtBnrb9bVAIj8axwUBlK',1,NULL,0,1),
 ('Supervisor Sistema','supervisor','$2y$12$3.lPsNIBYzzIJ3ZqVIOtAOZ47d/qo4qf2CtBnrb9bVAIj8axwUBlK',2,NULL,0,1),
-('User Sistema','user','$2y$12$3.lPsNIBYzzIJ3ZqVIOtAOZ47d/qo4qf2CtBnrb9bVAIj8axwUBlK',3,NULL,0,1);
+('Usuario Sistema','usuario','$2y$12$3.lPsNIBYzzIJ3ZqVIOtAOZ47d/qo4qf2CtBnrb9bVAIj8axwUBlK',3,NULL,0,1)
+ON DUPLICATE KEY UPDATE
+    nome = VALUES(nome),
+    senha = VALUES(senha),
+    nivel_acesso_id = VALUES(nivel_acesso_id),
+    senha_temporaria = VALUES(senha_temporaria),
+    ativo = VALUES(ativo);
