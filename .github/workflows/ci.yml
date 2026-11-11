@@ -181,14 +181,14 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Run Hadolint
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: docker/Dockerfile.nginx
           failure-threshold: error
           verbose: true
 
       - name: Run Hadolint (dev Dockerfile)
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: Dockerfile
           failure-threshold: error
