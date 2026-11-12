@@ -57,6 +57,8 @@ COPY --from=build /app/dist/assets/ public/assets/
 # Webfonts do Font Awesome: o postbuild copia para public/assets/webfonts,
 # que nao faz parte de dist/assets — sem esta linha os icones retornam 404.
 COPY --from=build /app/public/assets/webfonts/ public/assets/webfonts/
+# Lista de assets para o pre-cache do Service Worker (gerada no postbuild).
+COPY --from=build /app/public/sw-assets.json public/sw-assets.json
 
 # Configuracoes PHP
 RUN echo "memory_limit = 256M" > /usr/local/etc/php/conf.d/memory.ini \
