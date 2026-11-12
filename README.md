@@ -537,3 +537,24 @@ Atualizações em instâncias existentes:
 2. `composer install && npm install && npm run build` — atualizar dependências e rebuild frontend
 3. `php database/migrate.php` — aplicar migrations pendentes (índices, auditoria buffer, etc.) — em instalações novas via `cftv_gml.sql`, todas já aplicadas
 4. `php scripts/check-opcache.php` — validar OPcache (em especial se mudou PHP.ini)
+
+---
+
+## Fluxo de desenvolvimento (branches e PRs)
+
+- `main` — branch estável; recebe mudanças **apenas via Pull Request**.
+- `fix/dev-development` — branch de desenvolvimento; recebe correções e novas atualizações antes de ir para a `main`.
+
+```bash
+# trabalhar sempre na branch de desenvolvimento
+git checkout fix/dev-development
+
+git add -A
+git commit -m "fix: descrição da correção"
+git push
+
+# após verificação, abrir PR para a main
+gh pr create --base main --head fix/dev-development \
+  --title "fix: descrição da correção" \
+  --body "Resumo das mudanças e como validar."
+```
