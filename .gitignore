@@ -102,7 +102,6 @@ storage/cep_cache/
 coverage.xml
 coverage/
 
-# Auto-deploy do servidor (runtime, nao versionar)
+# Deploy manual do servidor (runtime, nao versionar)
 DEPLOYED_VERSION
 DEPLOYED_VERSION.tmp
-.deploy.lock
