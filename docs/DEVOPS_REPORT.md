@@ -90,7 +90,7 @@ Achados: 5 confirmados de baixa/média severidade (tag flutuante `composer:lates
 - **OK** — senhas por env (`DB_ROOT_PASSWORD`, `DB_PASS` com `${VAR:?}` obrigatório no prod); nenhuma credencial hardcoded em imagem/compose. `.env`/`.dockerignore` excluem `.env`.
 
 ### Volumes / Networks / Portas
-- Dev: `network_mode: host` (WSL2) com bind mount do código — hot reload. Prod: rede default isolada, DB não exposto publicamente (`127.0.0.1:3306`).
+- Dev: `network_mode: host` (Linux) com bind mount do código — hot reload. Prod: rede default isolada, DB não exposto publicamente (`127.0.0.1:3306`).
 - Porta prod `80:8080`. Volumes nomeados para storage/uploads.
 
 ### Cache de build / tamanho

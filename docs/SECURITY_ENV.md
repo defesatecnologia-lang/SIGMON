@@ -30,11 +30,17 @@ git filter-branch --tree-filter 'rm -f .env' -f HEAD
 ### 1. Em Desenvolvimento Local
 
 ```bash
-# Copiar template
-cp .env.template .env
+# Copiar template (Docker — .env na raiz do projeto)
+cp .env.example .env
+chmod 600 .env
 
 # Editar com suas credenciais
 nano .env  # ou seu editor preferido
+
+# Instalação manual (Linux) — arquivo externo ao projeto
+sudo mkdir -p /etc/sigmon
+sudo cp .env.example /etc/sigmon/.env
+sudo chmod 600 /etc/sigmon/.env
 ```
 
 ### 2. Em Produção (Docker)
@@ -69,7 +75,7 @@ env:
 
 - [ ] `.env` está no `.gitignore`
 - [ ] `.env` não foi commitado (verificar com `git log .env`)
-- [ ] `.env.example` ou `.env.template` está no repositório
+- [ ] `.env.example` e `.env.prod.example` estão no repositório
 - [ ] `.env` local tem senhas diferentes para cada ambiente
 - [ ] Em produção, `.env` está em local seguro (fora do web root)
 - [ ] Em CI/CD, credenciais estão em Secrets, não em código
@@ -78,11 +84,10 @@ env:
 ## 🔑 Gerando Senhas Seguras
 
 ```bash
-# Linux/Mac/WSL
+# Linux
 openssl rand -base64 32
-
-# PowerShell
-[Convert]::ToBase64String((1..32 | ForEach-Object {Get-Random -Maximum 256}) -as [byte[]])
+# ou
+openssl rand -hex 24
 ```
 
 ## Variáveis de Ambiente
@@ -99,7 +104,8 @@ openssl rand -base64 32
 | `SIGMON_SESSION_TIMEOUT` | Timeout de sessão (segundos) | `3600` (1 hora) |
 | `SIGMON_SESSION_ABSOLUTE_TIMEOUT` | Timeout absoluto (segundos) | `28800` (8 horas) |
 | `SIGMON_CSP_ALLOW_INLINE_STYLES` | Permitir inline CSS | `0` (recomendado), `1` (Bootstrap) |
-| `APP_PORT` | Porta HTTP | `80` (reverse proxy), `8080` (direto) |
+| `APP_PORT` | Porta HTTP publicada no host | `3000` (padrão), `80` (com proxy reverso) |
+| `DB_DATA_PATH` | Diretório dos dados do MySQL (Compose) | `/mnt/sstv-dados/mysql` |
 
 ---
 

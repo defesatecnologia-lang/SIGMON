@@ -1,8 +1,8 @@
 # ============================================
 #Desenvolvimento — Apache 2 + PHP 8.5 + MySQL 8.4 LTS
-#Otimizado para WSL2: network_mode: host evita o netavark/nftables
-#(que falha em rootless Podman no WSL2). Bind mount do codigo-fonte
-#permite hot reload sem rebuild.
+#Linux: network_mode: host faz o container usar a rede do host
+#(MySQL em 127.0.0.1:3306 e app em http://localhost:80). O bind mount
+#do codigo-fonte permite hot reload sem rebuild.
 #
 #Uso:
 #  docker compose up -d

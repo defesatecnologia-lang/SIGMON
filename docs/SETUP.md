@@ -1,25 +1,29 @@
-# Setup — Sistema de Câmeras
+# Setup — SIGMON
 
-Guia único de instalação (Linux produção e Windows desenvolvimento). Concatena
-a configuração do `.env` externo com o boot de dependências (Composer + npm) e
-build frontend (Vite).
+Guia de instalação em Linux (produção e desenvolvimento). Cobre a configuração
+do `.env`, dependências (Composer + npm), build do frontend (Vite) e as duas
+formas de execução: Docker (recomendado) ou servidor web nativo.
 
 ---
 
 ## 1. Arquitetura de Configuração
 
 ```
-DESENVOLVIMENTO (Windows + WSL2 - LINUX)
-└── C:\env\sigmon\
-    └── .env
-
-PRODUÇÃO (Linux)
+Instalação manual (Linux)
 └── /etc/sigmon/
     └── .env
+
+Docker (Linux)
+└── <raiz do projeto>/
+    └── .env          # lido pelo docker compose
 ```
 
-> O arquivo `.env` **não fica dentro do projeto** — isto evita versionar
-> credenciais. A aplicação procura os dois caminhos acima em ordem.
+> O arquivo `.env` **não é versionado**. Na instalação manual ele fica fora da
+> raiz do projeto (`/etc/sigmon/.env`); no Docker ele fica na raiz, mas está
+> coberto pelo `.gitignore`.
+>
+> Em containers, as variáveis também podem ser passadas diretamente pelo
+> ambiente do Compose — é o que o `docker-compose.prod.yml` faz.
 
 ---
 
@@ -27,19 +31,64 @@ PRODUÇÃO (Linux)
 
 | Ferramenta | Versão mínima | Notas |
 |-------------|---------------|-------|
-| PHP         | 8.4 +          | Extensões: pdo_mysql, apcu, openssl, mbstring, fileinfo |
+| PHP         | 8.4+          | Extensões: pdo_mysql, apcu, openssl, mbstring, fileinfo |
 | Composer    | 2.4+          | Para `composer install` e `composer audit` |
 | Node.js     | 20 LTS+       | Para `npm install && npm run build` |
 | MySQL/MariaDB | 8.4 LTS / 10.5+ | Schema em `config/DB/cftv_gml.sql` |
 | Apache      | 2.4+          | mod_rewrite, mod_deflate, mod_brotli (opcional) |
+| Docker + Compose | Engine 24+ / Compose v2 | Alternativa recomendada para produção |
 
 ---
 
-## 3. Passo a passo (Linux produção)
+## 3. Opção A — Docker (recomendado)
+
+### 3.1 Produção (Nginx + PHP-FPM + MySQL)
 
 ```bash
 # 1) Clone o repositório
-git clone <repo-url> sigmon
+git clone https://github.com/defesatecnologia-lang/sigmon.git
+cd sigmon
+
+# 2) Crie o .env a partir do template de produção
+cp .env.prod.example .env
+chmod 600 .env
+
+# 3) Edite as variáveis obrigatórias
+#    DB_PASS, DB_ROOT_PASSWORD, APP_PORT, APP_ALLOWED_ORIGINS e DB_DATA_PATH
+#    Gere senhas fortes com: openssl rand -hex 24
+nano .env
+
+# 4) Crie o diretório de dados do MySQL (UID 999 do container)
+sudo mkdir -p /mnt/sstv-dados/mysql
+sudo chown 999:999 /mnt/sstv-dados/mysql
+
+# 5) Suba os containers
+docker compose -f docker-compose.prod.yml up -d --build
+
+# 6) Acompanhe os logs
+docker compose -f docker-compose.prod.yml logs -f app
+```
+
+Acesse `http://<IP>:<APP_PORT>` (padrão `3000`).
+
+### 3.2 Desenvolvimento (Apache + PHP 8.5 + MySQL 8.4)
+
+```bash
+docker compose up -d
+# Acessar: http://localhost
+```
+
+O `docker-compose.yml` usa `network_mode: host` (Linux): o MySQL fica em
+`127.0.0.1:3306` e o Apache na porta 80 do host. O código é montado via bind
+mount, então alterações refletem sem rebuild.
+
+---
+
+## 4. Opção B — Instalação manual (Linux)
+
+```bash
+# 1) Clone o repositório
+git clone https://github.com/defesatecnologia-lang/sigmon.git
 cd sigmon
 
 # 2) Crie a pasta externa de configuração
@@ -51,7 +100,7 @@ sudo chmod 700 /etc/sigmon
 sudo cp .env.example /etc/sigmon/.env
 sudo chown www-data:www-data /etc/sigmon/.env
 sudo chmod 600 /etc/sigmon/.env
-sudo nano /etc/sigmon/.env   # preencha credenciais
+sudo nano /etc/sigmon/.env   # preencha as credenciais
 
 # 4) Instale dependências PHP
 composer install --no-interaction --prefer-dist
@@ -62,67 +111,42 @@ npm run build
 
 # 6) Importe o schema do banco
 mysql -u root -p < config/DB/cftv_gml.sql
-#    Em base nova, a tabela `migrations` já é criada e populada —
-#    confirme com: php database/migrate.php --status
-#    (esperado: Total: 0 | Applied: 14 | Pending: 0)
+#    Confirme o estado das migrations:
+php database/migrate.php --status
 
 # 7) Ajuste permissões de storage/cache
-if [ -d "storage" ]; then
-    sudo chown -R www-data:www-data storage
-    sudo chmod -R 775 storage
-fi
+sudo chown -R www-data:www-data storage
+sudo chmod -R 775 storage
 
 # 8) Reinicie o Apache
 sudo systemctl restart apache2
 ```
 
-Acesse: `http://sigmon.local`
+Acesse: `http://sigmon.local` (ou o IP/host configurado no VirtualHost).
 
----
-
-## 4. Passo a passo (Windows desenvolvimento — XAMPP)
-
-```powershell
-# 1) Crie a pasta externa de configuração
-New-Item -ItemType Directory -Path "C:\env\sigmon" -Force
-
-# 2) Copie o .env.example
-Copy-Item ".env.example" "C:\env\sigmon\.env"
-
-# 3) Edite com as credenciais locais
-notepad "C:\env\sigmon\.env"
-
-# 4) Instale dependências
-composer install
-npm install
-npm run build
-
-# 5) Importe o schema
-#    No MySQL Workbench ou via linha de comando:
-#    mysql -u root -p cftv_gml < config/DB/cftv_gml.sql
-```
-
-Edite `C:\xampp\php\php.ini` para desenvolvimento:
-```ini
-always_populate_raw_post_data = -1
-error_reporting = E_ALL
-display_errors = On
-```
+> Para desenvolvimento rápido sem Apache, use o servidor embutido:
+> `php -S localhost:3080 -t public/` e acesse `http://localhost:3080`.
 
 ---
 
 ## 5. Variáveis do `.env`
 
 ```env
-SIGMON_ENV=development                  # development | production
-DB_HOST=localhost
+SIGMON_ENV=production                   # development | testing | production
+DB_HOST=localhost                       # no Docker: db
+DB_PORT=3306
 DB_NAME=cftv_gml
-DB_USER=seu_usuario
-DB_PASS=sua_senha_forte
+DB_USER=cftv_user
+DB_PASS=sua_senha_forte                 # mínimo 32 caracteres
+DB_ROOT_PASSWORD=senha_root_forte       # usado pelo Compose
 APP_TIMEZONE=America/Sao_Paulo
 SIGMON_SESSION_TIMEOUT=3600             # segundos de inatividade
 SIGMON_SESSION_ABSOLUTE_TIMEOUT=28800   # 8h — expiração absoluta
 SIGMON_CSP_ALLOW_INLINE_STYLES=0        # mantenha 0 (CSP estrita)
+SIGMON_HTTP_ONLY=1                      # 1 = HTTP direto; 0 = HTTPS em 8443
+APP_PORT=3000                           # porta HTTP publicada no host
+APP_ALLOWED_ORIGINS=http://10.10.10.208:3000
+DB_DATA_PATH=/mnt/sstv-dados/mysql      # dados do MySQL (Compose de produção)
 ```
 
 ---
@@ -130,8 +154,9 @@ SIGMON_CSP_ALLOW_INLINE_STYLES=0        # mantenha 0 (CSP estrita)
 ## 6. Solução de Problemas
 
 ### "Arquivo de configuração não encontrado"
-- Windows: confirme `C:\env\sigmon\.env`
-- Linux: `ls -l /etc/sigmon/.env` (permissão `600`)
+- Confirme `ls -l /etc/sigmon/.env` (permissão `600`).
+- No Docker, verifique se o `.env` está na raiz do projeto e se as variáveis
+  chegaram ao container: `docker compose -f docker-compose.prod.yml config`.
 
 ### "Configurações ausentes: DB_PASS"
 O `.env` existe mas não contém a variável `DB_PASS`. Adicione a linha.
@@ -149,9 +174,15 @@ Instale Node.js 20 LTS+ (via nvm ou apt).
 - Reinstale: `npm install && npm run build`
 
 ### `php database/migrate.php --status` mostra itens pendentes
-Em base nova via `cftv_gml.sql`, deve mostrar `Total: 0 | Applied: 14 | Pending: 0`.
-Se mostrar pendentes, verifique se importou o `cftv_gml.sql` completo (trecho
-de `CREATE TABLE migrations` + `INSERT INTO migrations`).
+Rode `php database/migrate.php` para aplicar. Se a base foi criada pelo
+`cftv_gml.sql` e ainda houver pendências, confirme se o dump importado está
+completo (inclui `CREATE TABLE migrations` + `INSERT INTO migrations`).
+
+### Docker: permissão negada no diretório de dados
+O MySQL roda como UID/GID `999`:
+```bash
+sudo chown -R 999:999 /mnt/sstv-dados/mysql
+```
 
 ---
 
@@ -161,7 +192,7 @@ de `CREATE TABLE migrations` + `INSERT INTO migrations`).
 - **Nunca** coloque credenciais no código
 - Use senhas fortes (mínimo 32 caracteres)
 - Em produção, defina `SIGMON_ENV=production`
-- Permissões restritivas: `chmod 600 /etc/sigmon/.env`
+- Permissões restritivas: `chmod 600 .env`
 - Em produção, ative OPcache — valide com `php scripts/check-opcache.php`
   (exit 1 se OPcache estiver OFF)
 
@@ -171,25 +202,6 @@ de `CREATE TABLE migrations` + `INSERT INTO migrations`).
 
 - `php scripts/check-opcache.php` — smoke test OPcache
 - `composer audit` — checar vulnerabilidades em dependências PHP
-- Configurar VirtualHost do Apache apontando para `public/`
-- Ver `docs/DEPLOY.md` para implantação completa (Docker, CI/CD)
+- Configurar VirtualHost do Apache/Nginx apontando para `public/`
 - Ver `docs/SECURITY_ENV.md` para detalhes de segurança do `.env`
-
-
-
-
-
-#=====================================================
-suricato@mamute:~/projects/sigmon$ 
-Instalar nates de inicia o docker
-
-sudo snap install docker        
-sudo apt  install docker.io      
-sudo apt  install podman-docker 
-
-O Podman não está rodando. Execute:
-systemctl --user start podman.socket
-
-Executar
-
-docker compose -f docker-compose.nginx.yml up --build
+- Ver `README.md` para visão geral, API e estrutura do projeto

@@ -1,6 +1,6 @@
 # ============================================
 #Producao — Nginx + PHP-FPM 8.4 + MySQL 8.4 LTS
-#Para Ubuntu Server (Docker Engine nativo — NAO WSL2).
+#Para Ubuntu Server (Docker Engine nativo).
 #Sem bind mount de codigo: a imagem e auto-contida (build no CI/registry).
 #Baseline de hardening conforme ESPECIFICACAO-TECNICA-SEGURANCA-PHP.md (Secoes 33-41, 57)
 #
