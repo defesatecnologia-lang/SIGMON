@@ -101,3 +101,8 @@ storage/cep_cache/
 # Cobertura de testes
 coverage.xml
 coverage/
+
+# Auto-deploy do servidor (runtime, nao versionar)
+DEPLOYED_VERSION
+DEPLOYED_VERSION.tmp
+.deploy.lock

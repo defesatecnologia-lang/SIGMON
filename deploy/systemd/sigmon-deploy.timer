@@ -1,0 +1,12 @@
+[Unit]
+Description=SIGMON - verifica nova imagem no GHCR a cada 5 minutos
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=sigmon-deploy.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target
