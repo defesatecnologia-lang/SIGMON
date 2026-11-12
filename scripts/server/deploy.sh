@@ -1,30 +1,26 @@
 #!/usr/bin/env bash
 #
-# Auto-deploy do SIGMON no servidor.
+# Deploy manual do SIGMON no servidor.
 #
-# Fluxo:
-#   1. (opcional) sincroniza o checkout com origin/main          -> SYNC_GIT=1
-#   2. baixa a imagem publicada no GHCR (docker compose pull app)
-#   3. se a imagem mudou, recria apenas o container "app"
-#   4. grava a versao implantada em DEPLOYED_VERSION
+# A imagem é construída/publicada pelo workflow .github/workflows/cd.yml a
+# cada merge na main. Este script NÃO builda nada e NÃO mexe no Git: ele
+# apenas baixa a imagem publicada, recria o container "app" quando necessário
+# e registra a versão implantada em DEPLOYED_VERSION.
 #
-# A imagem e construida/publicada pelo workflow .github/workflows/cd.yml a
-# cada merge na main. Este script NAO builda nada no servidor.
+# Uso (no servidor, após atualizar o checkout):
+#   cd /opt/sistemas/sigmon
+#   git fetch origin && git reset --hard origin/main
+#   ./scripts/server/deploy.sh
 #
-# Uso:
-#   ./scripts/server/auto-deploy.sh
-#
-# Variaveis de ambiente (opcionais):
-#   SIGMON_DIR        diretorio do projeto      (default: /opt/sistemas/sigmon)
-#   COMPOSE_FILE      arquivo compose           (default: docker-compose.prod.yml)
-#   SYNC_GIT          1 = git fetch + reset --hard origin/main (default: 0)
-#   HEALTH_TIMEOUT    segundos aguardando healthcheck (default: 120)
+# Variáveis de ambiente (opcionais):
+#   SIGMON_DIR      diretório do projeto       (default: /opt/sistemas/sigmon)
+#   COMPOSE_FILE    arquivo compose            (default: docker-compose.prod.yml)
+#   HEALTH_TIMEOUT  segundos aguardando health (default: 120)
 #
 set -euo pipefail
 
 SIGMON_DIR="${SIGMON_DIR:-/opt/sistemas/sigmon}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
-SYNC_GIT="${SYNC_GIT:-0}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-120}"
 
 log() {
@@ -36,16 +32,9 @@ die() {
     exit 1
 }
 
-# Evita execucoes concorrentes (timer + execucao manual).
 cd "$SIGMON_DIR" || die "diretorio nao encontrado: $SIGMON_DIR"
 [ -f "$COMPOSE_FILE" ] || die "arquivo compose nao encontrado: $SIGMON_DIR/$COMPOSE_FILE"
 [ -f .env ] || die "arquivo .env nao encontrado em $SIGMON_DIR"
-
-exec 9>".deploy.lock"
-if ! flock -n 9; then
-    log "Outra execucao do deploy esta em andamento; saindo."
-    exit 0
-fi
 
 compose() {
     docker compose -f "$COMPOSE_FILE" "$@"
@@ -63,31 +52,10 @@ GITHUB_REPOSITORY="$(env_value GITHUB_REPOSITORY)"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-defesatecnologia-lang/sigmon}"
 IMAGE_REF="ghcr.io/${GITHUB_REPOSITORY}:${APP_TAG}"
 
-log "Iniciando deploy (dir=$SIGMON_DIR, imagem=$IMAGE_REF, sync_git=$SYNC_GIT)"
+log "Iniciando deploy (dir=$SIGMON_DIR, imagem=$IMAGE_REF)"
 
 # ---------------------------------------------------------------------------
-# 1. Sincronizacao opcional do checkout com a main
-# ---------------------------------------------------------------------------
-if [ "$SYNC_GIT" = "1" ]; then
-    command -v git >/dev/null 2>&1 || die "git nao encontrado no servidor"
-    log "Sincronizando checkout com origin/main"
-    # Nunca descarta alteracoes locais em arquivos versionados: se houver,
-    # aborta o deploy e deixa o arquivo intacto para analise manual.
-    if ! git diff --quiet || ! git diff --cached --quiet; then
-        die "existem alteracoes locais em arquivos versionados; faça commit/stash ou rode com SYNC_GIT=0"
-    fi
-    git fetch --prune origin main
-    if [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ]; then
-        git reset --hard origin/main
-    else
-        git checkout -B main origin/main
-    fi
-else
-    log "SYNC_GIT!=1; mantendo checkout local (somente a imagem sera atualizada)."
-fi
-
-# ---------------------------------------------------------------------------
-# 2. Estado atual e pull da imagem
+# 1. Estado atual e pull da imagem
 # ---------------------------------------------------------------------------
 current_container="$(compose ps -q app 2>/dev/null || true)"
 before_image=""
@@ -116,7 +84,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Aguarda o healthcheck
+# 2. Aguarda o healthcheck
 # ---------------------------------------------------------------------------
 container="$(compose ps -q app 2>/dev/null || true)"
 if [ -n "$container" ]; then
@@ -144,7 +112,7 @@ if [ -n "$container" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Registra a versao implantada
+# 3. Registra a versao implantada
 # ---------------------------------------------------------------------------
 version="$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.version" }}' "$IMAGE_REF" 2>/dev/null || true)"
 case "$version" in
