@@ -100,26 +100,41 @@ function vite_page_js(string $entryName): void
     <?php endif;
 }
 
-function vite_bootstrap_css(): ?string
+/**
+ * Retorna o CSS de uma entrada do manifest.
+ *
+ * Entradas puramente CSS (ex.: bootstrap.scss, fontawesome.scss) têm o próprio
+ * arquivo .css no campo `file`, sem o array `css`. Já entradas JS expõem o CSS
+ * extraído em `css`. Esta função cobre os dois formatos — em versões recentes
+ * do Vite o campo `css` não existe para entradas CSS-only.
+ */
+function vite_entry_css(string $entryName): ?string
 {
     $manifest = vite_manifest();
     foreach ($manifest as $entry) {
-        if (!empty($entry['isEntry']) && ($entry['name'] ?? '') === 'bootstrap' && !empty($entry['css'])) {
-            return $entry['css'][0];
+        if (empty($entry['isEntry']) || ($entry['name'] ?? '') !== $entryName) {
+            continue;
         }
+        if (!empty($entry['css'][0])) {
+            return (string)$entry['css'][0];
+        }
+        $file = (string)($entry['file'] ?? '');
+        if ($file !== '' && str_ends_with(strtolower($file), '.css')) {
+            return $file;
+        }
+        return null;
     }
     return null;
 }
 
+function vite_bootstrap_css(): ?string
+{
+    return vite_entry_css('bootstrap');
+}
+
 function vite_fontawesome_css(): ?string
 {
-    $manifest = vite_manifest();
-    foreach ($manifest as $entry) {
-        if (!empty($entry['isEntry']) && ($entry['name'] ?? '') === 'fontawesome' && !empty($entry['css'])) {
-            return $entry['css'][0];
-        }
-    }
-    return null;
+    return vite_entry_css('fontawesome');
 }
 
 function vite_bootstrap_js(): ?string
