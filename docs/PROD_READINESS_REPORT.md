@@ -32,8 +32,9 @@ O ambiente ativo (`sistema-cameras-v10-app`) usa `docker-compose.yml` (dev: Apac
 `target: dev`, `network_mode: host`, sem hardening). Os artefatos de produção
 (`docker-compose.prod.yml` + `docker/Dockerfile.nginx`: Nginx/FPM, `read_only`,
 `cap_drop: ALL`, `no-new-privileges`, `tmpfs`, limites de recursos) **nunca foram
-executados**. O log do app registra `db-init.sh não encontrado — pulando etapa de BD`,
-confirmando que o fluxo prod não foi testado.
+executados**. O schema é aplicado pelo próprio MySQL via
+`/docker-entrypoint-initdb.d/` (volume `config/DB/cftv_gml.sql`), sem depender de
+script de init da aplicação; o fluxo prod ainda não foi testado.
 
 **Ação:** subir em staging com `docker compose -f docker-compose.prod.yml up -d --build`
 e validar `api_health`, login, upload, CORS e HSTS.

@@ -1,55 +1,83 @@
 #!/bin/bash
+# ============================================
+# Backup do SIGMON — banco MySQL + uploads
+# ============================================
+# Faz o dump lógico do banco (serviço `db`) e empacota os uploads
+# (anexos/fotos do serviço `app`) usando o docker compose do projeto.
+#
+# Uso:
+#   ./scripts/backup.sh                                   # produção (docker-compose.prod.yml)
+#   COMPOSE_FILE=docker-compose.yml ./scripts/backup.sh   # desenvolvimento
+#
+# Variáveis:
+#   COMPOSE_FILE    Arquivo compose a usar (default: docker-compose.prod.yml)
+#   BACKUP_DIR      Diretório de destino  (default: /opt/backups/sigmon)
+#   RETENTION_DAYS  Dias de retenção      (default: 7)
+#
+# Cron (diário às 02:00, executar na raiz do projeto):
+#   0 2 * * * cd /opt/sigmon && ./scripts/backup.sh >> /var/log/sigmon-backup.log 2>&1
+# ============================================
 set -euo pipefail
 
-BACKUP_DIR="${BACKUP_DIR:-/opt/backups}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
+BACKUP_DIR="${BACKUP_DIR:-/opt/backups/sigmon}"
 RETENTION_DAYS="${RETENTION_DAYS:-7}"
-DATE=$(date +%Y%m%d_%H%M%S)
+DATE="$(date +%Y%m%d_%H%M%S)"
 LOG_FILE="${BACKUP_DIR}/backup.log"
 
-DB_HOST_CAMERAS="${DB_HOST_CAMERAS:-cameras-db}"
-DB_USER_CAMERAS="${DB_USER_CAMERAS:-root}"
-DB_PASS_CAMERAS="${DB_PASS_CAMERAS:?Erro: defina DB_PASS_CAMERAS}"
+if [ ! -f "$COMPOSE_FILE" ]; then
+    echo "ERRO: $COMPOSE_FILE não encontrado (execute a partir da raiz do projeto)." >&2
+    exit 1
+fi
 
-DB_HOST_VISITANTES="${DB_HOST_VISITANTES:-visitantes-db}"
-DB_USER_VISITANTES="${DB_USER_VISITANTES:-root}"
-DB_PASS_VISITANTES="${DB_PASS_VISITANTES:?Erro: defina DB_PASS_VISITANTES}"
-
-mkdir -p "${BACKUP_DIR}"
+mkdir -p "$BACKUP_DIR"
 
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "${LOG_FILE}"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
 }
 
-log "=== Iniciando backup ==="
+compose() {
+    docker compose -f "$COMPOSE_FILE" "$@"
+}
 
-MYSQLDUMP_OPTS="--all-databases --single-transaction --routines --triggers --events"
+log "=== Iniciando backup SIGMON ($COMPOSE_FILE) ==="
 
-log "Dump cameras-db..."
-docker exec cameras-db mysqldump -u "${DB_USER_CAMERAS}" -p"${DB_PASS_CAMERAS}" \
-  ${MYSQLDUMP_OPTS} 2>/dev/null | \
-  gzip > "${BACKUP_DIR}/cameras-db_${DATE}.sql.gz" || {
-    log "ERRO: Falha no dump cameras-db"
-    echo "ERRO: Falha no dump cameras-db" >&2
+# --- Banco de dados ---------------------------------------------------------
+# As credenciais vêm do próprio container `db` (MYSQL_USER/MYSQL_PASSWORD/
+# MYSQL_DATABASE definidos no compose), evitando duplicar segredos no host.
+DB_FILE="${BACKUP_DIR}/sigmon-db_${DATE}.sql.gz"
+log "Dump do banco (serviço 'db')..."
+if ! compose exec -T db sh -c \
+    'MYSQL_PWD="$MYSQL_PASSWORD" exec mysqldump --single-transaction --quick --routines --triggers --events \
+        -u"${MYSQL_USER:-root}" "${MYSQL_DATABASE:-cftv_gml}"' \
+    | gzip > "$DB_FILE"; then
+    log "ERRO: falha no dump do banco"
+    rm -f "$DB_FILE"
     exit 1
-}
+fi
 
-log "Dump visitantes-db..."
-docker exec visitantes-db mysqldump -u "${DB_USER_VISITANTES}" -p"${DB_PASS_VISITANTES}" \
-  ${MYSQLDUMP_OPTS} 2>/dev/null | \
-  gzip > "${BACKUP_DIR}/visitantes-db_${DATE}.sql.gz" || {
-    log "ERRO: Falha no dump visitantes-db"
-    echo "ERRO: Falha no dump visitantes-db" >&2
+if ! gzip -t "$DB_FILE" 2>/dev/null; then
+    log "ERRO: dump do banco corrompido"
+    rm -f "$DB_FILE"
     exit 1
-}
+fi
+log "Banco salvo: $DB_FILE ($(du -h "$DB_FILE" | cut -f1))"
 
-log "Backup fotos_visitantes..."
-docker run --rm \
-  -v sistema-visitantes-v10_fotos_visitantes:/data \
-  -v "${BACKUP_DIR}:/backup" \
-  alpine tar czf "/backup/fotos_visitantes_${DATE}.tar.gz" -C /data .
+# --- Uploads (anexos, fotos de manutenção) ----------------------------------
+UP_FILE="${BACKUP_DIR}/sigmon-uploads_${DATE}.tar.gz"
+log "Dump dos uploads (serviço 'app')..."
+if ! compose exec -T app tar czf - -C /var/www/html/public/uploads . > "$UP_FILE"; then
+    log "ERRO: falha no backup dos uploads"
+    rm -f "$UP_FILE"
+    exit 1
+fi
+log "Uploads salvos: $UP_FILE ($(du -h "$UP_FILE" | cut -f1))"
 
+# --- Retenção ---------------------------------------------------------------
 log "Removendo backups com mais de ${RETENTION_DAYS} dias..."
-find "${BACKUP_DIR}" \( -name "*.sql.gz" -o -name "*.tar.gz" \) -type f -mtime +${RETENTION_DAYS} -delete -print
+while IFS= read -r old; do
+    log "Removido: $old"
+done < <(find "$BACKUP_DIR" -type f \( -name "*.sql.gz" -o -name "*.tar.gz" \) \
+    -mtime +"${RETENTION_DAYS}" -print -delete)
 
-log "=== Backup concluido ==="
-echo "Backup salvo em: ${BACKUP_DIR}"
+log "=== Backup concluído ==="

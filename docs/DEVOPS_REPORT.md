@@ -51,13 +51,13 @@ Achados: 5 confirmados de baixa/média severidade (tag flutuante `composer:lates
 
 | Campo | Valor |
 | ----- | ----- |
-| Local | `docker-compose.yml:15,38` e `docker-compose.prod.yml:16,43` — ambos `cameras-db`/`cameras-app` |
-| Evidência | Rodar dev e prod no mesmo host gera colisão de nome de container. |
+| Local | `docker-compose.yml` e `docker-compose.prod.yml` — serviços `db`/`app` |
+| Evidência | Os compose já não declaram `container_name`; o nome do projeto é `sigmon` (`name:` no topo), evitando colisão entre dev e prod. |
 | Causa raiz | Cópia do compose sem parametrizar o nome. |
-| Risco | Baixo — impede coexistência dev/prod; confusão operacional. |
-| Classificação | **Confirmado** |
+| Risco | Baixo — resolvido. |
+| Classificação | **Resolvido** |
 | Severidade | Baixa |
-| Recomendação | Remover `container_name` (deixar Docker gerar) ou parametrizar (`${COMPOSE_PROJECT_NAME}`). |
+| Recomendação | Manter sem `container_name` (Docker gera nomes por projeto). |
 
 ### F-605 — Healthcheck HTTP sem proteção de auth (smoke test simples)
 

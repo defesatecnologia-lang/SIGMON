@@ -243,7 +243,7 @@ sigmon/
 │   ├── Api/                    # Testes de API (requer servidor http)
 │   └── bootstrap.php
 ├── scripts/                     # Scripts auxiliares
-│   ├── backup.ps1 / backup.sh  # Backup do banco
+│   ├── backup.ps1 / backup.sh  # Backup do banco + uploads
 │   ├── port-forward.ps1        # Port forwarding
 │   ├── copy-assets.js          # Cópia de assets pós-build
 │   ├── optimize-database.php   # Otimização do banco

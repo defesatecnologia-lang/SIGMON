@@ -211,7 +211,7 @@ Cache atual: APCu (dashboard 60s, lookups 300s, endpoints 30-60s), HTTP Cache-Co
 
 - Carregadas de arquivo externo (`/etc/sigmon/.env` ou `C:\env\sigmon\.env`), com exceção quando já definidas (Docker).
 - Chaves: `SIGMON_ENV`, `DB_HOST/NAME/USER/PASS`, `DB_SSL_CA`, `PROXY_TRUSTED_IPS`, `APP_ALLOWED_ORIGINS`, `APP_TIMEZONE`, `SIGMON_SESSION_TIMEOUT`, `SIGMON_SESSION_ABSOLUTE_TIMEOUT`, `ARGON2_*`, `BCRYPT_COST`, `SENTRY_DSN`, `SIGMON_CSP_ALLOW_INLINE_STYLES`, `VITE_API_URL`.
-- `config/DB/private/inserts-proprios.sql` e `seed_dev.sql` presentes (dados sensíveis/proprietários — não analisados nesta fase).
+- `config/DB/private/proprios-pml.sql` (dados locais de Londrina, **gitignored**) e `seed_dev.sql` presentes (dados sensíveis/proprietários — não analisados nesta fase).
 
 ---
 

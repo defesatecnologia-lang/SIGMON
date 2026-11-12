@@ -48,7 +48,6 @@ export default defineConfig({
         'cadastro-locais': './assets/js/entries/cadastro-locais.ts',
         'editar-locais': './assets/js/entries/editar-locais.ts',
         'listar-locais': './assets/js/entries/listar-locais.ts',
-        'notificacoes': './assets/js/entries/notificacoes.ts',
         'relatorio-diario': './assets/js/entries/relatorio-diario.ts',
       },
       output: {

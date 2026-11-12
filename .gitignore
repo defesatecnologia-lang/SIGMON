@@ -68,6 +68,9 @@ config/local.php
 .agents/
 skills-lock.json
 
+# Symlink local para config de IA (não versionar — quebra em clone/CI)
+Memory.md
+
 # Vite build output
 dist/
 public/sw-assets.json

@@ -14,15 +14,6 @@ mkdir -p "$STORAGE_DIR/ratelimit" "$STORAGE_DIR/cep_cache" "$UPLOADS_DIR"
 chown -R www-data:www-data "$STORAGE_DIR" "$UPLOADS_DIR" 2>/dev/null || true
 chmod -R 755 "$STORAGE_DIR" "$UPLOADS_DIR" 2>/dev/null || true
 
-# Database initialization (idempotent - safe to run on every start)
-if [ -x "/usr/local/bin/db-init.sh" ]; then
-    log "[db-init] Iniciando inicialização do banco de dados..."
-    sh /usr/local/bin/db-init.sh
-    log "[db-init] Inicialização do banco concluída."
-else
-    log "[db-init] db-init.sh não encontrado — pulando etapa de BD."
-fi
-
 # Garantir que vendor/ existe
 if [ ! -d "$APP_DIR/vendor" ]; then
     echo "[dev-entrypoint] vendor/ ausente — executando composer install..."
