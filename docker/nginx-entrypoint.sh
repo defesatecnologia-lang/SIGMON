@@ -19,6 +19,11 @@ CERT_FILE="$CERT_DIR/server.crt"
 KEY_FILE="$CERT_DIR/server.key"
 LOCATIONS_CONF="/etc/nginx/locations.conf"
 HTTP_ONLY="${SIGMON_HTTP_ONLY:-1}"
+# Normaliza o valor: remove CR (arquivos .env editados no Windows) e espacos.
+# Sem isso, "1\r" nao casa com o case abaixo e o container sobe em modo TLS,
+# devolvendo 301 em todas as requisicoes HTTP.
+HTTP_ONLY=$(printf '%s' "$HTTP_ONLY" | tr -d '\r' | tr -d '[:space:]')
+echo "[entrypoint] SIGMON_HTTP_ONLY='$HTTP_ONLY'"
 
 mkdir -p "$CONF_DIR" "$CERT_DIR"
 
