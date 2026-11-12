@@ -588,7 +588,7 @@ Atualizações em instâncias existentes:
 
 ## Fluxo de desenvolvimento (branches e PRs)
 
-- `main` — branch estável; recebe mudanças **apenas via Pull Request**.
+- `main` — branch estável; recebe mudanças **apenas via Pull Request** e é a **única origem de deploy** para o servidor.
 - `fix/dev-development` — branch de desenvolvimento; recebe correções e novas atualizações antes de ir para a `main`.
 
 ```bash
@@ -603,4 +603,16 @@ git push
 gh pr create --base main --head fix/dev-development \
   --title "fix: descrição da correção" \
   --body "Resumo das mudanças e como validar."
+```
+
+### Deploy no servidor (sempre a partir da `main`)
+
+O servidor **não** deve acompanhar a `fix/dev-development`. Após o merge do PR na `main`:
+
+```bash
+cd /opt/sistemas/sigmon
+git fetch origin
+git reset --hard origin/main      # mantém arquivos nao versionados/ignorados
+docker compose -f docker-compose.prod.yml build app
+docker compose -f docker-compose.prod.yml up -d --force-recreate app
 ```

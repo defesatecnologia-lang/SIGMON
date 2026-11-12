@@ -111,6 +111,22 @@ curl -I http://localhost/                      # 301 -> https
 
 ## Atualização manual (servidor)
 
+> **Regra de ouro:** o servidor faz deploy **somente a partir da branch `main`**.
+> Commits entram em `fix/dev-development`, sobem via Pull Request e só chegam ao
+> servidor depois do merge na `main`.
+
+### Build local a partir da `main` (fluxo atual)
+
+```bash
+cd /opt/sistemas/sigmon
+git fetch origin
+git reset --hard origin/main      # preserva arquivos nao versionados/ignorados
+docker compose -f docker-compose.prod.yml build app
+docker compose -f docker-compose.prod.yml up -d --force-recreate app
+```
+
+### Imagem publicada no GHCR (tag `v*`)
+
 Após publicar uma nova imagem no GHCR (via tag `v*`), atualize o servidor:
 
 ```bash
