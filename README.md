@@ -609,10 +609,22 @@ gh pr create --base main --head fix/dev-development \
 
 O servidor **não** deve acompanhar a `fix/dev-development`. Após o merge do PR na `main`:
 
+1. O workflow CD calcula a próxima versão (`v1.0.x`), cria a tag/release e publica a imagem no GHCR.
+2. O timer `sigmon-deploy.timer` no servidor baixa a imagem a cada 5 minutos e recria o `app`.
+3. A versão implantada fica registrada em `/opt/sistemas/sigmon/DEPLOYED_VERSION`.
+
 ```bash
 cd /opt/sistemas/sigmon
-git fetch origin
-git reset --hard origin/main      # mantém arquivos nao versionados/ignorados
-docker compose -f docker-compose.prod.yml build app
-docker compose -f docker-compose.prod.yml up -d --force-recreate app
+
+# instalar o timer uma única vez
+sudo ./deploy/systemd/install.sh /opt/sistemas/sigmon
+
+# acompanhar / forçar um deploy agora
+journalctl -u sigmon-deploy -f
+sudo systemctl start sigmon-deploy.service
+cat DEPLOYED_VERSION
 ```
+
+O servidor não builda nada localmente. Para rollback, defina `APP_TAG=vX.Y.Z` no `.env`
+e rode `sudo systemctl start sigmon-deploy.service`. Detalhes em
+[`docs/DEPLOY.md`](docs/DEPLOY.md).

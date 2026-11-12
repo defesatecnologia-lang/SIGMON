@@ -1,0 +1,21 @@
+[Unit]
+Description=SIGMON - auto-deploy (pull da imagem GHCR e recriacao do app)
+Documentation=file:///opt/sistemas/sigmon/docs/DEPLOY.md
+Wants=network-online.target
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# Executa como root para usar o Docker e o login do GHCR feitos via sudo.
+# Se preferir outro usuario, ajuste User= e garanta que ele esteja no grupo docker.
+User=root
+WorkingDirectory=/opt/sistemas/sigmon
+Environment=SIGMON_DIR=/opt/sistemas/sigmon
+Environment=COMPOSE_FILE=docker-compose.prod.yml
+# 1 = mantem o checkout sincronizado com origin/main (recusa alteracoes locais
+# em arquivos versionados). 0 = apenas baixa a imagem.
+Environment=SYNC_GIT=1
+ExecStart=/opt/sistemas/sigmon/scripts/server/auto-deploy.sh
+TimeoutStartSec=600
+Nice=10
