@@ -2,11 +2,12 @@ name: CI / Security Scan
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, fix/dev-development]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, fix/dev-development]
   schedule:
     - cron: '0 6 * * 1'  # Semanal às segundas 06:00 UTC
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -40,6 +41,96 @@ jobs:
       - name: Composer Audit
         # Bloqueia apenas em vulnerabilidades CRITICAL/HIGH (ignora LOW/MEDIUM)
         run: composer audit --no-dev --ignore-severity=low --ignore-severity=medium --format=plain
+
+  php-lint:
+    name: PHP Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Lint PHP files
+        run: composer lint
+
+  php-tests:
+    name: PHP Tests (PHPUnit)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sigmon_test
+          MYSQL_USER: sigmon
+          MYSQL_PASSWORD: sigmon
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -usigmon -psigmon"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      SIGMON_ENV: testing
+      APP_TIMEZONE: America/Sao_Paulo
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_NAME: sigmon_test
+      DB_USER: sigmon
+      DB_PASS: sigmon
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, zip, gd, xml, curl, apcu
+          ini-values: memory_limit=256M
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run PHPUnit
+        run: composer test
+
+  js-tests:
+    name: JS Tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Vitest
+        run: npm test
 
   node-deps:
     name: Node Dependencies (npm audit)
@@ -104,7 +195,7 @@ jobs:
   docker-build:
     name: Build prod image (Nginx)
     runs-on: ubuntu-latest
-    needs: [php-deps, node-deps]
+    needs: [php-deps, php-lint, php-tests, js-tests, node-deps]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -197,25 +288,32 @@ jobs:
   security-summary:
     name: Security Summary
     runs-on: ubuntu-latest
-    needs: [php-deps, node-deps, docker-build, trivy-fs, trivy-image, hadolint]
+    needs: [php-deps, php-lint, php-tests, js-tests, node-deps, docker-build, trivy-fs, trivy-image, hadolint]
     if: always()
     steps:
       - name: Check job statuses
         run: |
-          echo "=== Security Scan Summary ==="
+          echo "=== CI / Security Scan Summary ==="
           echo "PHP Deps: ${{ needs.php-deps.result }}"
+          echo "PHP Lint: ${{ needs.php-lint.result }}"
+          echo "PHP Tests: ${{ needs.php-tests.result }}"
+          echo "JS Tests: ${{ needs.js-tests.result }}"
           echo "Node Deps: ${{ needs.node-deps.result }}"
           echo "Docker Build (prod Nginx): ${{ needs.docker-build.result }}"
           echo "Trivy FS: ${{ needs.trivy-fs.result }} (non-blocking)"
           echo "Trivy Image: ${{ needs.trivy-image.result }} (non-blocking)"
           echo "Hadolint: ${{ needs.hadolint.result }}"
           
-          # Only block on php-deps, node-deps, docker-build, hadolint (trivy is informational)
+          # Only block on php-deps, php-lint, php-tests, js-tests, node-deps, docker-build, hadolint
+          # (trivy is informational)
           if [[ "${{ needs.php-deps.result }}" != "success" ]] || \
+             [[ "${{ needs.php-lint.result }}" != "success" ]] || \
+             [[ "${{ needs.php-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.js-tests.result }}" != "success" ]] || \
              [[ "${{ needs.node-deps.result }}" != "success" ]] || \
              [[ "${{ needs.docker-build.result }}" != "success" ]] || \
              [[ "${{ needs.hadolint.result }}" != "success" ]]; then
-            echo "::error::Blocking security checks failed"
+            echo "::error::Blocking CI checks failed"
             exit 1
           fi
-          echo "All blocking security checks passed!"
+          echo "All blocking CI checks passed!"
