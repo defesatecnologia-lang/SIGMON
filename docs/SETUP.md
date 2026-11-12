@@ -30,7 +30,7 @@ PRODUÇÃO (Linux)
 | PHP         | 8.4 +          | Extensões: pdo_mysql, apcu, openssl, mbstring, fileinfo |
 | Composer    | 2.4+          | Para `composer install` e `composer audit` |
 | Node.js     | 20 LTS+       | Para `npm install && npm run build` |
-| MySQL/MariaDB | 8.0+ / 10.5+ | Schema em `config/DB/cftv_gml.sql` |
+| MySQL/MariaDB | 8.4 LTS / 10.5+ | Schema em `config/DB/cftv_gml.sql` |
 | Apache      | 2.4+          | mod_rewrite, mod_deflate, mod_brotli (opcional) |
 
 ---
