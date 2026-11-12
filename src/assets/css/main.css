@@ -445,6 +445,13 @@ a:hover {
   padding: 15px 0;
 }
 
+/* O container do navbar nao deve herdar o padding vertical de 2rem
+   aplicado por theme-enhancements.css aos container-fluid das paginas. */
+.navbar > .container-fluid {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .navbar-brand {
   font-weight: 700;
   font-size: 1.5rem;
@@ -457,12 +464,29 @@ a:hover {
   padding: 8px 15px;
   border-radius: var(--border-radius-sm);
   transition: var(--transition-fast);
+  white-space: nowrap;
 }
 
 .navbar-nav .nav-link:hover,
 .navbar-nav .nav-link.active {
   background: rgba(255, 255, 255, 0.1);
   color: white !important;
+}
+
+/* Evita que os menus fiquem espremidos em telas medias. */
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+  .navbar {
+    padding: 10px 0;
+  }
+
+  .navbar-brand {
+    font-size: 1.3rem;
+  }
+
+  .navbar-nav .nav-link {
+    padding: 8px 10px;
+    font-size: 0.95rem;
+  }
 }
 
 /* ===== PAGINAÇÃO ===== */

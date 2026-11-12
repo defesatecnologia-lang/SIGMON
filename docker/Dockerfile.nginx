@@ -12,6 +12,16 @@ COPY vite.config.ts tsconfig.json postcss.config.js ./
 COPY src/ src/
 COPY public/ public/
 COPY scripts/ scripts/
+# O PurgeCSS (postcss.config.js) le os templates PHP para descobrir quais
+# classes estao realmente em uso. Sem estas copias o build do Docker nao
+# encontra resources/inc/auth/accounts e remove estilos de layout usados
+# apenas nessas telas (navbar, cards do dashboard, centralizacao de paginas).
+COPY resources/ resources/
+COPY inc/ inc/
+COPY auth/ auth/
+COPY accounts/ accounts/
+COPY api/ api/
+COPY config/ config/
 RUN npm run build
 
 # ============================================
