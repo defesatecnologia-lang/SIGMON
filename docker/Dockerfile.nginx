@@ -102,8 +102,13 @@ RUN rm -f /etc/nginx/sites-enabled/default \
 
 EXPOSE 8080 8443
 
+# Em SIGMON_HTTP_ONLY=1 (padrao) a app responde em 8080; em modo TLS em 8443.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD curl -kfsS https://localhost:8443/ || exit 1
+    CMD if [ "${SIGMON_HTTP_ONLY:-1}" = "1" ] || [ "${SIGMON_HTTP_ONLY:-1}" = "true" ]; then \
+          curl -fsS http://localhost:8080/ >/dev/null || exit 1; \
+        else \
+          curl -kfsS https://localhost:8443/ >/dev/null || exit 1; \
+        fi
 
 # Rodar como www-data (nao root) — nginx master + php-fpm
 USER www-data
