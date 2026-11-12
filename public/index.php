@@ -56,6 +56,10 @@ $cspPolicy = "default-src 'self'; "
     . "base-uri 'self'; "
     . "form-action 'self'";
 header('Content-Security-Policy: ' . $cspPolicy);
+// HTML nunca deve ser cacheado: ele carrega as URLs versionadas dos assets
+// (?v=<mtime>). Um HTML antigo apontaria para URLs antigas presas no cache.
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 header('Referrer-Policy: strict-origin-when-cross-origin');

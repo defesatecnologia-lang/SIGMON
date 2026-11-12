@@ -15,17 +15,17 @@
 <?php
     $bootstrapCss = vite_bootstrap_css();
 if ($bootstrapCss) : ?>
-    <link rel="stylesheet" href="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $bootstrapCss ?>">
+    <link rel="stylesheet" href="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $bootstrapCss ?><?= vite_asset_version($bootstrapCss) ?>">
 <?php endif; ?>
 <?php
     $fontAwesomeCss = vite_fontawesome_css();
 if ($fontAwesomeCss) : ?>
-    <link rel="stylesheet" href="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $fontAwesomeCss ?>">
+    <link rel="stylesheet" href="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $fontAwesomeCss ?><?= vite_asset_version($fontAwesomeCss) ?>">
 <?php endif; ?>
 <?php
     $viteCss = vite_css();
 if ($viteCss) : ?>
-    <link rel="stylesheet" href="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $viteCss ?>">
+    <link rel="stylesheet" href="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $viteCss ?><?= vite_asset_version($viteCss) ?>">
 <?php endif; ?>
     <script nonce="<?= htmlspecialchars($CSP_NONCE ?? '', ENT_QUOTES, 'UTF-8') ?>">
         const BASE_URL = '<?= htmlspecialchars(rtrim($APP_PUBLIC_PATH ?? '/public', '/') . '/', ENT_QUOTES, 'UTF-8') ?>';
@@ -44,7 +44,7 @@ if ($viteCss) : ?>
 <?php
     $bootstrapJs = vite_bootstrap_js();
 if ($bootstrapJs) : ?>
-<script type="module" src="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $bootstrapJs ?>"></script>
+<script type="module" src="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $bootstrapJs ?><?= vite_asset_version($bootstrapJs) ?>"></script>
 <?php endif; ?>
 <script nonce="<?= htmlspecialchars($CSP_NONCE ?? '', ENT_QUOTES, 'UTF-8') ?>">
     window.FETCH_TIMEOUT = 30000;
@@ -61,9 +61,9 @@ if ($bootstrapJs) : ?>
     $viteMainImports = vite_entry_imports('main');
 if ($viteMainJs) :
     foreach ($viteMainImports as $imp) : ?>
-<link rel="modulepreload" href="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $imp ?>">
+<link rel="modulepreload" href="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $imp ?><?= vite_asset_version($imp) ?>">
     <?php endforeach; ?>
-<script type="module" src="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $viteMainJs ?>"></script>
+<script type="module" src="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $viteMainJs ?><?= vite_asset_version($viteMainJs) ?>"></script>
 <?php endif; ?>
 <script nonce="<?= htmlspecialchars($CSP_NONCE ?? '', ENT_QUOTES, 'UTF-8') ?>">
   // Registrar Service Worker para PWA support

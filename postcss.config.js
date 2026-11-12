@@ -28,6 +28,16 @@ export default {
             /^alert-/, /^badge-/, /^card-/, /^form-/,
             /^table-/, /^text-/, /^bg-/, /^border-/,
             /^offset-/, /^col-/, /^row/, /^g-/,
+            // `body class="page-<pagina>"` é montado dinamicamente no PHP
+            // (inc/header.php), então o PurgeCSS não encontra a classe no
+            // conteúdo e apagaria qualquer regra escopada por `.page-*`.
+            /^page-/,
+            // Ícones do Font Awesome: classes usadas em templates JS,
+            // montadas dinamicamente ou por nome vindo de dados. Manter o
+            // conjunto completo evita ícones "invisíveis" por terem sido
+            // removidos no build.
+            'fa', 'fas', 'far', 'fab',
+            /^fa-/,
           ],
         },
       }),

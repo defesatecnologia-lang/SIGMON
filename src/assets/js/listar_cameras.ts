@@ -176,7 +176,7 @@ function exibirCameras(cameras: Array<Record<string, unknown>>): void {
     if (cameras.length === 0) {
         container.innerHTML = `
             <div class="text-center text-muted py-4">
-                <i class="fas fa-camera-slash fa-2x mb-2"></i>
+                <i class="fas fa-video-slash fa-2x mb-2"></i>
                 <p>Nenhuma câmera encontrada</p>
                 <button type="button" class="btn btn-primary mt-2" data-action="limpar-filtros">
                     <i class="fas fa-broom me-1"></i>Limpar Filtros

@@ -31,6 +31,32 @@ function vite_manifest(): array
     return $manifest;
 }
 
+/**
+ * Versao curta para cache-busting de um asset publicado.
+ *
+ * Os nomes com hash do Vite ja mudam quando o conteudo muda, mas o navegador
+ * pode manter em cache um 301/404 antigo para a mesma URL (aconteceu durante o
+ * periodo em que o Nginx respondia 301 em tudo, antes do modo HTTP-only). Como
+ * o hash nao muda se o CSS nao mudou, a URL antiga continuava "envenenada".
+ *
+ * Acrescentar ?v=<mtime> cria uma URL nova a cada build, garantindo que o
+ * navegador busque o arquivo de verdade. O Nginx ignora a query em try_files.
+ */
+function vite_asset_version(string $assetPath): string
+{
+    $clean = ltrim($assetPath, '/');
+    $candidates = [
+        __DIR__ . '/../public/' . $clean,
+        __DIR__ . '/../dist/' . $clean,
+    ];
+    foreach ($candidates as $file) {
+        if (is_file($file)) {
+            return '?v=' . filemtime($file);
+        }
+    }
+    return '';
+}
+
 function vite_asset(string $entryName): ?string
 {
     $manifest = vite_manifest();
@@ -61,7 +87,7 @@ function vite_page_css(string $entryName): void
     foreach ($manifest as $entry) {
         if (!empty($entry['isEntry']) && ($entry['name'] ?? '') === $entryName && !empty($entry['css'])) {
             foreach ($entry['css'] as $css) {
-                echo '<link rel="stylesheet" href="' . htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') . '/' . $css . '">' . "\n";
+                echo '<link rel="stylesheet" href="' . htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') . '/' . $css . vite_asset_version($css) . '">' . "\n";
             }
             return;
         }
@@ -94,9 +120,9 @@ function vite_page_js(string $entryName): void
     $viteImports = vite_entry_imports($entryName);
     if ($vitePageJs) :
         foreach ($viteImports as $imp) : ?>
-<link rel="modulepreload" href="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $imp ?>">
+<link rel="modulepreload" href="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $imp ?><?= vite_asset_version($imp) ?>">
         <?php endforeach; ?>
-<script type="module" src="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $vitePageJs ?>"></script>
+<script type="module" src="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>/<?= $vitePageJs ?><?= vite_asset_version($vitePageJs) ?>"></script>
     <?php endif;
 }
 
