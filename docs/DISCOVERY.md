@@ -37,7 +37,7 @@ Levantado a partir de `composer.json`, `package.json`, `Dockerfile`, `docker-com
 | Segurança de deps   | roave/security-advisories | dev-latest + `composer audit` | Ativo | Oficial |
 | Docker              | PHP + Apache, multi-stage | php:8.4-apache / node:20-slim | Atual | Oficial |
 | CI/CD               | GitHub Actions         | ci.yml + cd.yml      | Ativo         | Oficial |
-| SO de referência    | Linux (WSL2 compatível), também Windows | — | — | — |
+| SO de referência    | Linux | — | — | — |
 
 **Observações:**
 - O CI (`ci.yml`) testa com PHP **8.3**, enquanto `composer.json` exige **>= 8.4.1** e o `Dockerfile` usa **php:8.4-apache**. Há **discrepância de versão** entre CI, composer e Docker (ver BACK/DEVOPS pendente de validação).

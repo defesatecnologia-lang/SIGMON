@@ -53,18 +53,52 @@ Sistema web para gerenciamento centralizado de câmeras de segurança e centrais
 
 ## Requisitos
 
-- **PHP 8.4+** com extensões: `pdo_mysql`, `json`, `session`, `fileinfo`, `mbstring`, `zip`
+- **PHP 8.4+** com extensões: `pdo_mysql`, `json`, `session`, `fileinfo`, `mbstring`, `zip`, `apcu`, `openssl`
 - **MySQL 8.4 LTS** ou **MariaDB 10.5+**
 - **Composer** para dependências PHP
 - **Node.js 20+** (para build do frontend com Vite)
-- **Servidor web**: Apache (XAMPP/WAMP/LAMP) ou PHP built-in server
+- **Servidor web**: Apache 2.4+ ou Nginx com PHP-FPM 8.4+ (Linux), ou **Docker Engine + Compose v2**
 
 ## Instalação
 
-### 1. Clonar e instalar dependências
+### Opção 1 — Docker (recomendado)
+
+**Produção** (Nginx + PHP-FPM + MySQL):
 
 ```bash
-git clone https://github.com/elciomsantos/sigmon.git
+git clone https://github.com/defesatecnologia-lang/sigmon.git
+cd sigmon
+
+# Template de produção
+cp .env.prod.example .env
+# Edite DB_PASS, DB_ROOT_PASSWORD, APP_PORT, APP_ALLOWED_ORIGINS e DB_DATA_PATH
+# Senhas fortes: openssl rand -hex 24
+chmod 600 .env
+
+# Diretório de dados do MySQL (UID 999) — ajuste o ponto de montagem se necessário
+sudo mkdir -p /mnt/sstv-dados/mysql
+sudo chown 999:999 /mnt/sstv-dados/mysql
+
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Acesse `http://<IP>:<APP_PORT>` (padrão `3000`).
+
+**Desenvolvimento** (Apache + PHP 8.5 + MySQL 8.4, hot reload):
+
+```bash
+docker compose up -d
+# Acessar: http://localhost
+```
+
+> O `docker-compose.yml` de desenvolvimento usa `network_mode: host`, portanto é destinado a Linux.
+
+### Opção 2 — Instalação manual (Linux)
+
+#### 1. Clonar e instalar dependências
+
+```bash
+git clone https://github.com/defesatecnologia-lang/sigmon.git
 cd sigmon
 
 # Instalar dependências PHP
@@ -74,46 +108,43 @@ composer install
 npm install
 ```
 
-### 2. Configurar ambiente
+#### 2. Configurar ambiente
 
-O sistema carrega configurações de uma pasta externa por segurança:
+O sistema carrega configurações de uma pasta externa ao projeto por segurança:
 
-**Windows (XAMPP):**
-```powershell
-New-Item -ItemType Directory -Path "C:\env\sigmon" -Force
-Copy-Item ".env.example" "C:\env\sigmon\.env"
-# Editar C:\env\sigmon\.env com credenciais do banco
-```
-
-**Linux:**
 ```bash
 sudo mkdir -p /etc/sigmon
 sudo cp .env.example /etc/sigmon/.env
-sudo chown -R www-data:www-data /etc/sigmon
-sudo chmod 700 /etc/sigmon
+sudo chown www-data:www-data /etc/sigmon/.env
+sudo chmod 600 /etc/sigmon/.env
+sudo nano /etc/sigmon/.env   # preencha as credenciais do banco
 ```
 
-### 3. Importar banco de dados
+#### 3. Importar banco de dados
 
 ```bash
 mysql -u root -p < config/DB/cftv_gml.sql
 ```
 
-### 4. Build do frontend (opcional para desenvolvimento)
+#### 4. Build do frontend
 
 ```bash
 npm run build     # Produção
 npm run dev       # Desenvolvimento (Vite dev server em :3000)
 ```
 
-### 5. Iniciar servidor
+#### 5. Iniciar servidor (DocumentRoot em `public/`)
 
-**Apache (XAMPP):** Acessar `http://localhost/sigmon/public/`
-
-**PHP built-in server:**
+**Apache:**
 ```bash
-php -S localhost:8080 -t public/
-# Acessar: http://localhost:8080
+sudo systemctl restart apache2
+# Acessar: http://sigmon.local
+```
+
+**PHP built-in server (somente desenvolvimento):**
+```bash
+php -S localhost:3080 -t public/
+# Acessar: http://localhost:3080
 ```
 
 ## Configuração
@@ -126,9 +157,13 @@ SIGMON_ENV=development
 
 # Banco de Dados
 DB_HOST=localhost
+DB_PORT=3306
 DB_NAME=cftv_gml
 DB_USER=seu_usuario
 DB_PASS=sua_senha
+
+# TLS/SSL do banco (opcional — caminho absoluto para o CA cert)
+DB_SSL_CA=
 
 # Proxy Confiavel (X-Forwarded-For trust)
 PROXY_TRUSTED_IPS=
@@ -146,14 +181,20 @@ SIGMON_SESSION_ABSOLUTE_TIMEOUT=28800
 # CSP (0=strict, 1=permite inline styles p/ Bootstrap)
 SIGMON_CSP_ALLOW_INLINE_STYLES=0
 
+# Sentry DSN (opcional — habilita error tracking em produção)
+SENTRY_DSN=
+
 # Vite Dev Server: URL base da API para o proxy
 VITE_API_URL=http://localhost:80
 ```
 
 > **Compatibilidade:** o prefixo `SIGMON_*` substitui o antigo `CAMERAS_*`, e o
-> arquivo de configuração passou a ser `/etc/sigmon/.env` (Linux) ou
-> `C:\env\sigmon\.env` (Windows). Os nomes/paths antigos (`CAMERAS_*` e
-> `/etc/sistema-cameras/.env`) continuam funcionando como fallback.
+> arquivo de configuração passou a ser `/etc/sigmon/.env` (Linux). Os nomes/paths
+> antigos (`CAMERAS_*` e `/etc/sistema-cameras/.env`) continuam funcionando como
+> fallback.
+>
+> Em containers, as variáveis podem ser passadas diretamente pelo ambiente do
+> Compose (`docker-compose.prod.yml`), sem depender do arquivo externo.
 
 ## Estrutura do Projeto
 
@@ -237,17 +278,24 @@ sigmon/
 ├── storage/                     # Dados runtime
 │   ├── cep_cache/              # Cache de consultas CEP
 │   └── ratelimit/              # Dados de rate limiting
-├── tests/                       # Testes PHPUnit (176 testes)
+├── database/                    # Runner de migrations
+│   └── migrations/             # Migrations (YYYY_MM_DD_HHMMSS_*.php)
+├── docker/                      # Dockerfiles e configs Nginx/Apache
+├── tests/                       # Testes PHPUnit (190+ testes)
 │   ├── Unit/                   # Testes unitários
 │   ├── Integration/            # Testes de integração
 │   ├── Api/                    # Testes de API (requer servidor http)
 │   └── bootstrap.php
 ├── scripts/                     # Scripts auxiliares
-│   ├── backup.ps1 / backup.sh  # Backup do banco + uploads
-│   ├── port-forward.ps1        # Port forwarding
+│   ├── backup.sh               # Backup do banco + uploads (Docker)
+│   ├── check-opcache.php       # Valida OPcache em produção
 │   ├── copy-assets.js          # Cópia de assets pós-build
 │   ├── optimize-database.php   # Otimização do banco
 │   └── run_migrations.php      # Runner de migrações
+├── docker-compose.yml           # Desenvolvimento (Linux, host network)
+├── docker-compose.prod.yml      # Produção (Nginx + PHP-FPM + MySQL)
+├── .env.example                 # Template — instalação manual
+├── .env.prod.example            # Template — Docker produção
 ├── composer.json
 ├── package.json
 ├── vite.config.ts
@@ -318,7 +366,7 @@ Todos os endpoints usam `index.php?page=api/` como base. Formato de resposta pad
 - `api/api_relatorios_cameras` — GET Relatórios
 - `api/api_status` — GET Status agregados
 
-### Utilitários
+### Consultas e utilidades
 - `api/api_ping` — GET Ping (público)
 - `api/api_health` — GET Health check (admin)
 - `api/api_cep_lookup` — GET Consulta CEP
@@ -366,12 +414,12 @@ A hierarquia é cumulativa: `admin > supervisor > user`. Usuários com nível su
 ### Boas Práticas em Produção
 
 1. Definir `SIGMON_ENV=production`
-2. Habilitar `SIGMON_FORCE_HTTPS_SESSION=1`
+2. Habilitar `SIGMON_FORCE_HTTPS_SESSION=1` **somente** quando o acesso for por HTTPS (com `SIGMON_HTTP_ONLY=1`, deixe desativado)
 3. Configurar `SIGMON_CSP_ALLOW_INLINE_STYLES=0`
 4. Usar HTTPS com HSTS
 5. Configurar `APP_ALLOWED_ORIGINS` para CORS
-6. Manter `.env` fora do repositório
-7. Backups diários do banco (`scripts/backup.sh` ou `scripts/backup.ps1`)
+6. Nunca versionar o `.env` (já coberto pelo `.gitignore`)
+7. Backups diários do banco (`scripts/backup.sh`)
 
 ## Testes
 
@@ -389,15 +437,16 @@ vendor/bin/phpunit tests/Api/
 vendor/bin/phpstan analyse
 ```
 
-**176+ testes, 0 erros PHPStan, 0 falhas.**
+**190+ testes PHPUnit, 0 erros PHPStan, 0 falhas.**
 
 > Nota: skips ambientais ocorrem quando o servidor HTTP de teste não está no ar (tests/Api) ou o MySQL de teste não está disponível (tests/Integration) — não são regressões.
 
 | Suite | Testes | Cobertura |
 |-------|--------|-----------|
-| Unit | SecurityTest, LocaisServiceTest, AlarmeServiceTest, FileUploadValidationTest, LookupServiceTest | Classes core, validação, segurança, lookups |
+| Unit | SecurityTest, LocaisServiceTest, AlarmeServiceTest, EquipamentoServiceTest, FileUploadValidationTest, FormValidatorTest, ManutencaoServiceTest, LookupServiceTest, RateLimiterTest, RequestValidatorTest, ApiResponseTest | Classes core, validação, segurança, lookups |
 | Integration | EquipamentoServiceTest | CRUD com banco |
 | Api | AlarmeApiTest, CameraApiTest, HealthTest | Endpoints (requer servidor) |
+| Js | Vitest (`tests/Js`) | Frontend/API smoke |
 
 ## Migrations
 
@@ -414,23 +463,20 @@ php database/migrate.php
 php database/migrate.php --down 1
 ```
 
-### Migrations consolidadas no `cftv_gml.sql`
-
-As migrations abaixo já estão incorporadas ao schema principal
-(`config/DB/cftv_gml.sql`) e registradas na tabela `migrations` como
-aplicadas — ou seja, uma base nova importada via `cftv_gml.sql` **não
-precisa rodar `migrate.php`**. Os arquivos `.php` foram removidos do
-repositório no commit `de909e9`; o histórico permanece no git para
-referência.
+### Migrations disponíveis
 
 | Timestamp | Descrição |
 |-----------|-----------|
 | `2026_07_13_110000` | Triggers `trg_locais_bi`/`trg_locais_bu` de anti-duplicidade em `locais` |
+| `2026_08_20_140000` | Relatório Diário de Turno (escala 12x36) |
+| `2026_08_31_171000` | Tabela `usuario_anotacoes` (anotações pessoais) |
+| `2026_11_12_000000` | Normalização da collation para `utf8mb4_unicode_ci` |
 
-As migrations `2026_07_10_100000`, `2026_07_10_110000`, `2026_07_10_120000`,
-`2026_07_11_100000`, `2026_07_12_100000`, `2026_07_13_100000` e
-`2026_07_14_100000` foram consolidadas diretamente no schema e **não**
-são mais arquivos nem entradas da tabela `migrations`.
+Parte das migrations antigas (`2026_07_10_*` a `2026_07_14_*`) já está
+incorporada ao schema principal (`config/DB/cftv_gml.sql`) e registrada na
+tabela `migrations`; em uma base nova importada por esse arquivo, apenas as
+migrations ainda não aplicadas aparecerão como pendentes — confirme com
+`php database/migrate.php --status`.
 
 Para adições futuras, crie novos arquivos `.php` em `database/migrations/`
 seguindo o formato `YYYY_MM_DD_HHMMSS_description.php` (com `'up'` e
@@ -511,7 +557,7 @@ npm install && npm run build
 
 - **Backend**: PHP 8.4+, PDO, Monolog
 - **Frontend**: TypeScript, Vite 8, Bootstrap 5.3, Chart.js, PostCSS, esbuild
-- **Banco**: MySQL 8.0+ / MariaDB 10.5+
+- **Banco**: MySQL 8.4 LTS / MariaDB 10.5+
 - **Ícones**: Font Awesome 6 (self-host via npm `@fortawesome/fontawesome-free`)
 - **Mapa**: Leaflet
 - **Testes**: PHPUnit 10, Vitest
@@ -521,28 +567,28 @@ npm install && npm run build
 ---
 
 **Versão**: 1.0.0
-**Última atualização**: 2026-07-12 (Performance Tier 1+2+3 aplicados)
+**Última atualização**: 2026-11-12
 
-Passos para nova implantação:
-1. `mysql -u root -p < config/DB/cftv_gml.sql` — importa schema completo (com todos os objetos: índices, triggers, procedures, eventos, partições e tabela `migrations` já populada)
-2. Copiar `.env.example` → configurar credenciais em `C:\env\sigmon\.env` (Windows) ou `/etc/sigmon/.env` (Linux)
+Passos para nova implantação (Linux):
+1. `mysql -u root -p < config/DB/cftv_gml.sql` — importa schema completo (índices, triggers, procedures, eventos, partições e tabela `migrations` já populada)
+2. Configurar credenciais em `/etc/sigmon/.env` (instalação manual) ou `.env` na raiz do projeto (Docker)
 3. `composer install` — dependências PHP
 4. `npm install && npm run build` — build frontend (Vite + Brotli + Font Awesome self-host + webfonts)
-5. `php database/migrate.php --status` — confirma que não há migrations pendentes (`Total: 0 | Applied: 14 | Pending: 0`)
+5. `php database/migrate.php --status` — confirma migrations pendentes (`Pending: 0`)
 6. `php scripts/check-opcache.php` — validar OPcache ativo (recomendado)
-7. Configurar Apache/Nginx apontando para `public/`
+7. Configurar Apache/Nginx apontando para `public/` ou subir com `docker compose -f docker-compose.prod.yml up -d --build`
 
 Atualizações em instâncias existentes:
 1. `git pull` — obter código novo
 2. `composer install && npm install && npm run build` — atualizar dependências e rebuild frontend
-3. `php database/migrate.php` — aplicar migrations pendentes (índices, auditoria buffer, etc.) — em instalações novas via `cftv_gml.sql`, todas já aplicadas
-4. `php scripts/check-opcache.php` — validar OPcache (em especial se mudou PHP.ini)
+3. `php database/migrate.php` — aplicar migrations pendentes
+4. `php scripts/check-opcache.php` — validar OPcache (em especial se mudou o `php.ini`)
 
 ---
 
 ## Fluxo de desenvolvimento (branches e PRs)
 
-- `main` — branch estável; recebe mudanças **apenas via Pull Request**.
+- `main` — branch estável; recebe mudanças **apenas via Pull Request** e é a **única origem de deploy** para o servidor.
 - `fix/dev-development` — branch de desenvolvimento; recebe correções e novas atualizações antes de ir para a `main`.
 
 ```bash
@@ -557,4 +603,16 @@ git push
 gh pr create --base main --head fix/dev-development \
   --title "fix: descrição da correção" \
   --body "Resumo das mudanças e como validar."
+```
+
+### Deploy no servidor (sempre a partir da `main`)
+
+O servidor **não** deve acompanhar a `fix/dev-development`. Após o merge do PR na `main`:
+
+```bash
+cd /opt/sistemas/sigmon
+git fetch origin
+git reset --hard origin/main      # mantém arquivos nao versionados/ignorados
+docker compose -f docker-compose.prod.yml build app
+docker compose -f docker-compose.prod.yml up -d --force-recreate app
 ```

@@ -43,6 +43,13 @@ public/uploads/temp/
 !config/DB/cftv_gml.sql
 !config/DB/migrations/*.sql
 !migrations/*.sql
+
+# Arquivos criados localmente no servidor (cargas, dumps, exports)
+# Nao versionar nada novo em config/DB/private/; manter apenas os arquivos base.
+config/DB/private/*
+!config/DB/private/hash_password.php
+!config/DB/private/manual.md
+!config/DB/private/seed_dev.sql
 # SSL/TLS
 *.pem
 *.key

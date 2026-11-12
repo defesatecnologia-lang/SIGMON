@@ -1,6 +1,6 @@
 <?php use App\Services\NotificacaoService; ?>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container">
+<nav class="navbar navbar-expand-xl navbar-dark bg-primary shadow-sm">
+    <div class="container-fluid px-3 px-lg-4">
         <a class="navbar-brand fw-bold" href="?page=home">
             <i class="fas fa-camera me-2"></i>
             SIGMON

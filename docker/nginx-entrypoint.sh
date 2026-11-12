@@ -3,13 +3,13 @@
 # Entrypoint do container app (Nginx + PHP-FPM).
 # Roda como www-data (uid 33) — nao escala privilegio.
 #
-# 1. Garante certificados TLS em /etc/nginx/certs/:
-#    - usa o montado/CA interna se existir (server.crt/server.key);
-#    - caso contrario gera um self-signed (fallback para intranet).
-# 2. Renderiza o bloco server em /run/nginx_conf/server.conf:
-#    - HTTPS na 8443 (ssl) incluindo docker/locations.conf;
-#    - HTTP na 8080 com redirect 301 -> HTTPS.
-# 3. Sobe Nginx + PHP-FPM.
+# Modos:
+#   - SIGMON_HTTP_ONLY=1 (padrao neste deploy por IP): HTTP na 8080 servindo a app.
+#   - SIGMON_HTTP_ONLY=0: HTTPS na 8443 + redirect 301 de 8080 -> HTTPS.
+#
+# Em modo TLS, garante certificados em /etc/nginx/certs/:
+#   - usa o montado/CA interna se existir (server.crt/server.key);
+#   - caso contrario gera self-signed (fallback para intranet).
 # ============================================
 set -e
 
@@ -18,22 +18,39 @@ CERT_DIR="/etc/nginx/certs"
 CERT_FILE="$CERT_DIR/server.crt"
 KEY_FILE="$CERT_DIR/server.key"
 LOCATIONS_CONF="/etc/nginx/locations.conf"
+HTTP_ONLY="${SIGMON_HTTP_ONLY:-1}"
+# Normaliza o valor: remove CR (arquivos .env editados no Windows) e espacos.
+# Sem isso, "1\r" nao casa com o case abaixo e o container sobe em modo TLS,
+# devolvendo 301 em todas as requisicoes HTTP.
+HTTP_ONLY=$(printf '%s' "$HTTP_ONLY" | tr -d '\r' | tr -d '[:space:]')
+echo "[entrypoint] SIGMON_HTTP_ONLY='$HTTP_ONLY'"
 
 mkdir -p "$CONF_DIR" "$CERT_DIR"
 
-if [ ! -s "$CERT_FILE" ] || [ ! -s "$KEY_FILE" ]; then
-    echo "[entrypoint] Nenhum certificado em $CERT_DIR — gerando self-signed (substitua por CA interna se necessario)."
-    openssl req -x509 -nodes -newkey rsa:2048 -days 825 \
-        -keyout "$KEY_FILE" -out "$CERT_FILE" \
-        -subj "/C=BR/O=Sistema Cameras e Alarmes/CN=sigmon" \
-        >/dev/null 2>&1
-    chmod 600 "$KEY_FILE"
-    chmod 644 "$CERT_FILE"
-fi
+case "$HTTP_ONLY" in
+    1|true|TRUE|yes|YES|on|ON)
+        cat > "$CONF_DIR/server.conf" <<EOF
+server {
+    listen 8080 default_server;
+    server_name _;
 
-# O nginx monta $https automaticamente ("on" em conexoes TLS);
-# portanto cookie Secure + HSTS da aplicacao funcionam no HTTPS.
-cat > "$CONF_DIR/server.conf" <<EOF
+    include $LOCATIONS_CONF;
+}
+EOF
+        echo "[entrypoint] Modo HTTP_ONLY ativo — servindo aplicacao em 8080 (sem redirect TLS)."
+        ;;
+    *)
+        if [ ! -s "$CERT_FILE" ] || [ ! -s "$KEY_FILE" ]; then
+            echo "[entrypoint] Nenhum certificado em $CERT_DIR — gerando self-signed (substitua por CA interna se necessario)."
+            openssl req -x509 -nodes -newkey rsa:2048 -days 825 \
+                -keyout "$KEY_FILE" -out "$CERT_FILE" \
+                -subj "/C=BR/O=Sistema Cameras e Alarmes/CN=sigmon" \
+                >/dev/null 2>&1
+            chmod 600 "$KEY_FILE"
+            chmod 644 "$CERT_FILE"
+        fi
+
+        cat > "$CONF_DIR/server.conf" <<EOF
 server {
     listen 8080 default_server;
     server_name _;
@@ -54,6 +71,9 @@ server {
     include $LOCATIONS_CONF;
 }
 EOF
+        echo "[entrypoint] Modo TLS ativo — HTTPS em 8443 com redirect de 8080."
+        ;;
+esac
 
 echo "[entrypoint] Config de servidor gerada em $CONF_DIR/server.conf"
 

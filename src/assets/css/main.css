@@ -174,6 +174,34 @@ a:hover {
   padding: 0 15px;
 }
 
+/* ===== CARDS DE AUTENTICACAO =====
+   Telas de login/troca de senha usam o grid do Bootstrap
+   (.container > .row.justify-content-center > .col-md-6). Estas regras
+   garantem o card centralizado e com largura maxima mesmo se o CSS do
+   Bootstrap falhar/atrasar o carregamento. */
+.page-trocar_senha .container.mt-5,
+.page-alterar_senha .container.mt-5 {
+  width: 100%;
+  max-width: 1140px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-trocar_senha .row.justify-content-center,
+.page-alterar_senha .row.justify-content-center {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.page-trocar_senha .col-md-6,
+.page-alterar_senha .col-md-6 {
+  width: 100%;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* ===== CARDS ===== */
 .card {
   border: none;
@@ -417,6 +445,13 @@ a:hover {
   padding: 15px 0;
 }
 
+/* O container do navbar nao deve herdar o padding vertical de 2rem
+   aplicado por theme-enhancements.css aos container-fluid das paginas. */
+.navbar > .container-fluid {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .navbar-brand {
   font-weight: 700;
   font-size: 1.5rem;
@@ -429,12 +464,29 @@ a:hover {
   padding: 8px 15px;
   border-radius: var(--border-radius-sm);
   transition: var(--transition-fast);
+  white-space: nowrap;
 }
 
 .navbar-nav .nav-link:hover,
 .navbar-nav .nav-link.active {
   background: rgba(255, 255, 255, 0.1);
   color: white !important;
+}
+
+/* Evita que os menus fiquem espremidos em telas medias. */
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+  .navbar {
+    padding: 10px 0;
+  }
+
+  .navbar-brand {
+    font-size: 1.3rem;
+  }
+
+  .navbar-nav .nav-link {
+    padding: 8px 10px;
+    font-size: 0.95rem;
+  }
 }
 
 /* ===== PAGINAÇÃO ===== */

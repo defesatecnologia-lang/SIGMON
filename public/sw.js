@@ -3,9 +3,9 @@
  * v5 - Lê sw-assets.json pós-build para pré-cachear assets Vite com hash
  */
 
-const CACHE_NAME = 'sigmon-app-v8';
-const API_CACHE = 'sigmon-api-v8';
-const ASSETS_CACHE = 'sigmon-assets-v8';
+const CACHE_NAME = 'sigmon-app-v10';
+const API_CACHE = 'sigmon-api-v10';
+const ASSETS_CACHE = 'sigmon-assets-v10';
 
 let BASE_URL = '';
 

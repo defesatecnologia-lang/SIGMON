@@ -5,11 +5,17 @@
 // pacote é `../webfonts`, que a partir de /assets/ resolveria para /webfonts/
 // — caminho inexistente que cai no front controller PHP e devolve HTML no
 // lugar da fonte (ícones não renderizam). Configuramos o módulo de variáveis
-// para o caminho relativo correto: `webfonts/...`.
+// para o caminho relativo correto.
+//
+// O subdiretório `v1` versiona a URL das fontes: elas não têm hash no nome e
+// o navegador pode ter guardado um 301/404 antigo para /assets/webfonts/...
+// (período em que o Nginx redirecionava tudo para HTTPS). Ao trocar a versão
+// do diretório as URLs mudam e o cache antigo é ignorado. Ao alterar as
+// fontes no futuro, suba para `v2` e copie em scripts/copy-assets.js.
 //
 // Font Awesome 7 usa o módulo Sass `$font-path`; é preciso configurá-lo com
 // `@use ... with` ANTES de carregar os demais módulos que o consomem.
-@use "@fortawesome/fontawesome-free/scss/variables" with ($font-path: "webfonts");
+@use "@fortawesome/fontawesome-free/scss/variables" with ($font-path: "webfonts/v1");
 
 // Core + estilos base
 @use "@fortawesome/fontawesome-free/scss/fontawesome";

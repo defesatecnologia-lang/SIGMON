@@ -1,6 +1,6 @@
 # ============================================
 #Producao — Nginx + PHP-FPM 8.4 + MySQL 8.4 LTS
-#Para Ubuntu Server (Docker Engine nativo — NAO WSL2).
+#Para Ubuntu Server (Docker Engine nativo).
 #Sem bind mount de codigo: a imagem e auto-contida (build no CI/registry).
 #Baseline de hardening conforme ESPECIFICACAO-TECNICA-SEGURANCA-PHP.md (Secoes 33-41, 57)
 #
@@ -17,7 +17,11 @@ services:
   db:
     image: mysql:8.4
     restart: unless-stopped
-    command: ["--event-scheduler=ON", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    # log-bin-trust-function-creators=1: o binlog vem habilitado por padrao no
+    # MySQL 8 e, sem esta flag, a criacao de proximo_codigo_equipamento() no
+    # schema base falha com ERROR 1418 e interrompe o import do dump no meio
+    # (deixando de criar triggers, notificacoes, migrations etc.).
+    command: ["--event-scheduler=ON", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--log-bin-trust-function-creators=1"]
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD required}
       MYSQL_DATABASE: ${DB_NAME:-cftv_gml}
@@ -34,6 +38,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      # A primeira inicializacao (initdb + import do schema) pode levar
+      # varios minutos em disco mecanico/RAID. Sem isso, o healthcheck
+      # marca o banco como unhealthy antes de terminar e o app nao sobe.
+      start_period: 300s
     networks:
       - backend
     # Hardening: nao-root (mysql UID 999), capabilities minimas, read-only onde possivel
@@ -56,17 +64,23 @@ services:
 
   app:
     # Imagem do registry GHCR (build no CD) OU build local.
-    image: ghcr.io/${GITHUB_REPOSITORY:-elciomsantos/sigmon}:${APP_TAG:-latest}
+    # GHCR exige nome de imagem minusculo (por isso sigmon em minusculas).
+    image: ghcr.io/${GITHUB_REPOSITORY:-defesatecnologia-lang/sigmon}:${APP_TAG:-latest}
     build:
       context: .
       dockerfile: docker/Dockerfile.nginx
     restart: unless-stopped
     ports:
-      # HTTP (redirect 301 -> HTTPS) e HTTPS (TLS na 8443 interno -> 443 publico)
-      - "${APP_PORT:-80}:8080"
+      # Porta HTTP da aplicacao (mapeada para 8080 interno).
+      # Ex.: APP_PORT=3000 para acesso via http://10.10.10.208:3000
+      - "${APP_PORT:-3000}:8080"
+      # Porta HTTPS interna (8443). Publicar apenas se SIGMON_HTTP_ONLY=0.
       - "${APP_HTTPS_PORT:-443}:8443"
     environment:
       SIGMON_ENV: production
+      # 1 = serve HTTP direto em APP_PORT (recomendado para acesso por IP sem proxy TLS).
+      # 0 = ativa HTTPS em 8443 e redireciona 8080 -> HTTPS.
+      SIGMON_HTTP_ONLY: ${SIGMON_HTTP_ONLY:-1}
       DB_HOST: db
       DB_PORT: 3306
       DB_NAME: ${DB_NAME:-cftv_gml}
@@ -80,6 +94,9 @@ services:
       # Confiar no proxy Nginx (container app) para headers X-Forwarded-For.
       # Defina em .env para listar os IPs reais dos load balancers (vazio = nenhum).
       PROXY_TRUSTED_IPS: ${PROXY_TRUSTED_IPS:-}
+      # Origem(ens) permitida(s) para CORS/same-origin (separadas por virgula).
+      # Ex.: http://10.10.10.208:3000
+      APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-}
     volumes:
       - app_storage:/var/www/html/storage
       - app_uploads:/var/www/html/public/uploads
@@ -88,6 +105,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "if [ \"${SIGMON_HTTP_ONLY:-1}\" = \"1\" ] || [ \"${SIGMON_HTTP_ONLY:-1}\" = \"true\" ]; then curl -fsS http://localhost:8080/ >/dev/null || exit 1; else curl -kfsS https://localhost:8443/ >/dev/null || exit 1; fi"
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
     networks:
       - frontend
       - backend

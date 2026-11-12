@@ -120,18 +120,32 @@ console.log(`[postbuild] Brotli: ${brotliCount} arquivos comprimidos.`);
 console.log('[postbuild] Copiando webfonts do Font Awesome...');
 const FA_PKG_WEBFONTS = resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/webfonts');
 const PUBLIC_WEBFONTS = resolve(__dirname, '../public/assets/webfonts');
+// Copia tambem para dist/assets/webfonts: garante que qualquer deploy que
+// empacote apenas dist/assets/ (ex.: Dockerfile.nginx) leve as fontes junto.
+const DIST_WEBFONTS = resolve(__dirname, '../dist/assets/webfonts');
 
 if (existsSync(FA_PKG_WEBFONTS)) {
     ensureDir(PUBLIC_WEBFONTS);
+    ensureDir(DIST_WEBFONTS);
+    // Copia tambem para webfonts/v1 — diretorio versionado referenciado pelo
+    // CSS ($font-path em src/assets/scss/fontawesome.scss). Trocar a versao
+    // invalida URLs de fonte que tenham ficado presas no cache do navegador.
+    const PUBLIC_WEBFONTS_V = join(PUBLIC_WEBFONTS, 'v1');
+    const DIST_WEBFONTS_V = join(DIST_WEBFONTS, 'v1');
+    ensureDir(PUBLIC_WEBFONTS_V);
+    ensureDir(DIST_WEBFONTS_V);
     let webfontCount = 0;
     for (const entry of readdirSync(FA_PKG_WEBFONTS, { withFileTypes: true })) {
         if (entry.isDirectory()) continue;
         // Apenas woff2 (essencial) e ttf (fallback legacy). Ignora svg, eot.
         if (!entry.name.endsWith('.woff2') && !entry.name.endsWith('.ttf')) continue;
         copyFileSync(join(FA_PKG_WEBFONTS, entry.name), join(PUBLIC_WEBFONTS, entry.name));
+        copyFileSync(join(FA_PKG_WEBFONTS, entry.name), join(DIST_WEBFONTS, entry.name));
+        copyFileSync(join(FA_PKG_WEBFONTS, entry.name), join(PUBLIC_WEBFONTS_V, entry.name));
+        copyFileSync(join(FA_PKG_WEBFONTS, entry.name), join(DIST_WEBFONTS_V, entry.name));
         webfontCount++;
     }
-    console.log(`[postbuild] OK — ${webfontCount} webfonts copiadas.`);
+    console.log(`[postbuild] OK — ${webfontCount} webfonts copiadas (public + dist, flat + v1).`);
 } else {
     console.warn('[postbuild] AVISO: @fortawesome/fontawesome-free/webfonts nao encontrado. Execute "npm install".');
 }
