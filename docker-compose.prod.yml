@@ -34,6 +34,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      # A primeira inicializacao (initdb + import do schema) pode levar
+      # varios minutos em disco mecanico/RAID. Sem isso, o healthcheck
+      # marca o banco como unhealthy antes de terminar e o app nao sobe.
+      start_period: 300s
     networks:
       - backend
     # Hardening: nao-root (mysql UID 999), capabilities minimas, read-only onde possivel
