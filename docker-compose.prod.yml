@@ -17,7 +17,11 @@ services:
   db:
     image: mysql:8.4
     restart: unless-stopped
-    command: ["--event-scheduler=ON", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    # log-bin-trust-function-creators=1: o binlog vem habilitado por padrao no
+    # MySQL 8 e, sem esta flag, a criacao de proximo_codigo_equipamento() no
+    # schema base falha com ERROR 1418 e interrompe o import do dump no meio
+    # (deixando de criar triggers, notificacoes, migrations etc.).
+    command: ["--event-scheduler=ON", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--log-bin-trust-function-creators=1"]
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD required}
       MYSQL_DATABASE: ${DB_NAME:-cftv_gml}
