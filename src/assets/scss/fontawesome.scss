@@ -1,18 +1,23 @@
 // Font Awesome self-host via npm package.
-// Vite resolve os URLs das webfonts (woff2) para `assets/` com hash automaticamente.
+//
+// O CSS gerado fica em public/assets/fontawesome-*.css e as webfonts em
+// public/assets/webfonts/ (copiadas por scripts/copy-assets.js). O default do
+// pacote é `../webfonts`, que a partir de /assets/ resolveria para /webfonts/
+// — caminho inexistente que cai no front controller PHP e devolve HTML no
+// lugar da fonte (ícones não renderizam). Configuramos o módulo de variáveis
+// para o caminho relativo correto: `webfonts/...`.
+//
+// Font Awesome 7 usa o módulo Sass `$font-path`; é preciso configurá-lo com
+// `@use ... with` ANTES de carregar os demais módulos que o consomem.
+@use "@fortawesome/fontawesome-free/scss/variables" with ($font-path: "webfonts");
 
-// Importar functions ANTES de variables — senao `fa-divide` é indefinido.
-@import "@fortawesome/fontawesome-free/scss/functions";
-@import "@fortawesome/fontawesome-free/scss/variables";
-@import "@fortawesome/fontawesome-free/scss/mixins";
-
-// Core + estilos base (fontawesome.scss encadeia _core, _icons, _list, etc)
-@import "@fortawesome/fontawesome-free/scss/fontawesome";
+// Core + estilos base
+@use "@fortawesome/fontawesome-free/scss/fontawesome";
 
 // Estilos por familia
-@import "@fortawesome/fontawesome-free/scss/solid";
-@import "@fortawesome/fontawesome-free/scss/regular";
-@import "@fortawesome/fontawesome-free/scss/brands";
+@use "@fortawesome/fontawesome-free/scss/solid";
+@use "@fortawesome/fontawesome-free/scss/regular";
+@use "@fortawesome/fontawesome-free/scss/brands";
 
 // Compat com sintaxe legacy `fa`
-@import "@fortawesome/fontawesome-free/scss/v4-shims";
+@use "@fortawesome/fontawesome-free/scss/v4-shims";

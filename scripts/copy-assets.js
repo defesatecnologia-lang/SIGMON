@@ -115,7 +115,8 @@ compressBrotli(PUBLIC_ASSETS);
 console.log(`[postbuild] Brotli: ${brotliCount} arquivos comprimidos.`);
 
 // Self-host Font Awesome webfonts — copia woff2/ttf do pacote npm para public/assets/webfonts/
-// Mantem o caminho relativo esperado pelo CSS gerado pelo Vite (url(../webfonts/...)).
+// Mantem o caminho relativo esperado pelo CSS gerado pelo Vite (url(webfonts/...),
+// configurado em src/assets/scss/fontawesome.scss).
 console.log('[postbuild] Copiando webfonts do Font Awesome...');
 const FA_PKG_WEBFONTS = resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/webfonts');
 const PUBLIC_WEBFONTS = resolve(__dirname, '../public/assets/webfonts');
