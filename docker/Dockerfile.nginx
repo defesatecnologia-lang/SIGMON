@@ -19,7 +19,7 @@ RUN npm run build
 # ============================================
 FROM php:8.4-fpm
 
-LABEL org.opencontainers.image.source="https://github.com/elciomsantos/sigmon"
+LABEL org.opencontainers.image.source="https://github.com/defesatecnologia-lang/SIGMON"
 LABEL org.opencontainers.image.description="Sistema de Gerenciamento de Cameras e Alarmes (Nginx)"
 LABEL org.opencontainers.image.licenses="MIT"
 

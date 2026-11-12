@@ -86,14 +86,14 @@ curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
 
 # Baixar docker-compose.prod.yml e .env de exemplo do repositório
-curl -O https://raw.githubusercontent.com/elciomsantos/sigmon/main/docker-compose.prod.yml
-curl -o .env.prod.example https://raw.githubusercontent.com/elciomsantos/sigmon/main/.env.prod.example
+curl -O https://raw.githubusercontent.com/defesatecnologia-lang/SIGMON/main/docker-compose.prod.yml
+curl -o .env.prod.example https://raw.githubusercontent.com/defesatecnologia-lang/SIGMON/main/.env.prod.example
 cp .env.prod.example .env
 # editar .env com senhas e DB_DATA_PATH
 
 # Schema inicial (usado pelo MySQL apenas na primeira inicialização do diretório de dados)
 mkdir -p config/DB
-curl -o config/DB/cftv_gml.sql https://raw.githubusercontent.com/elciomsantos/sigmon/main/config/DB/cftv_gml.sql
+curl -o config/DB/cftv_gml.sql https://raw.githubusercontent.com/defesatecnologia-lang/SIGMON/main/config/DB/cftv_gml.sql
 
 # Subir (imagem do GHCR + schema init no MySQL se DB_DATA_PATH estiver vazio)
 docker compose -f docker-compose.prod.yml up -d
@@ -126,5 +126,5 @@ Ou, apontando para uma tag específica:
 APP_TAG=v1.0.1 docker compose -f docker-compose.prod.yml up -d
 ```
 
-> **Nota:** o compose usa `image: ghcr.io/elciomsantos/sigmon:${APP_TAG:-latest}`.
+> **Nota:** o compose usa `image: ghcr.io/defesatecnologia-lang/sigmon:${APP_TAG:-latest}`.
 > Defina `GITHUB_REPOSITORY` para apontar para outro repositório GHCR.

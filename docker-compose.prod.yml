@@ -64,7 +64,8 @@ services:
 
   app:
     # Imagem do registry GHCR (build no CD) OU build local.
-    image: ghcr.io/${GITHUB_REPOSITORY:-elciomsantos/sigmon}:${APP_TAG:-latest}
+    # GHCR exige nome de imagem minusculo (por isso sigmon em minusculas).
+    image: ghcr.io/${GITHUB_REPOSITORY:-defesatecnologia-lang/sigmon}:${APP_TAG:-latest}
     build:
       context: .
       dockerfile: docker/Dockerfile.nginx
