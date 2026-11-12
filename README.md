@@ -54,7 +54,7 @@ Sistema web para gerenciamento centralizado de câmeras de segurança e centrais
 ## Requisitos
 
 - **PHP 8.4+** com extensões: `pdo_mysql`, `json`, `session`, `fileinfo`, `mbstring`, `zip`
-- **MySQL 8.0+** ou **MariaDB 10.5+**
+- **MySQL 8.4 LTS** ou **MariaDB 10.5+**
 - **Composer** para dependências PHP
 - **Node.js 20+** (para build do frontend com Vite)
 - **Servidor web**: Apache (XAMPP/WAMP/LAMP) ou PHP built-in server

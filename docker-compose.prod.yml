@@ -1,5 +1,5 @@
 # ============================================
-#Producao — Nginx + PHP-FPM 8.4 + MySQL 8.0
+#Producao — Nginx + PHP-FPM 8.4 + MySQL 8.4 LTS
 #Para Ubuntu Server (Docker Engine nativo — NAO WSL2).
 #Sem bind mount de codigo: a imagem e auto-contida (build no CI/registry).
 #Baseline de hardening conforme ESPECIFICACAO-TECNICA-SEGURANCA-PHP.md (Secoes 33-41, 57)
@@ -15,7 +15,7 @@ name: sigmon
 
 services:
   db:
-    image: mysql:8.0
+    image: mysql:8.4
     restart: unless-stopped
     command: ["--event-scheduler=ON"]
     environment:
