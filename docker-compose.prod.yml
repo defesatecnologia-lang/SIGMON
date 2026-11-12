@@ -4,12 +4,14 @@
 #Sem bind mount de codigo: a imagem e auto-contida (build no CI/registry).
 #Baseline de hardening conforme ESPECIFICACAO-TECNICA-SEGURANCA-PHP.md (Secoes 33-41, 57)
 #
-#Uso (servidor Ubuntu):
+#Uso (servidor Ubuntu — imagem publicada pelo CD):
 #   cp .env.prod.example .env       # configurar credenciais
-#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d --no-build
 #
-#Alternativa (imagem de registry):
-#   Definir APP_TAG e GITHUB_REPOSITORY ou usar imagem pre-builtada.
+#Build manual (apenas desenvolvimento):
+#   docker compose -f docker-compose.prod.yml build app
+#   Definir APP_TAG e GITHUB_REPOSITORY para apontar a outra imagem/tag.
 #============================================
 name: sigmon
 

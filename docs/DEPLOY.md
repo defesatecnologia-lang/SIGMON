@@ -127,7 +127,7 @@ ls config/DB/cftv_gml.sql
 
 # Primeira subida (baixa a imagem publicada)
 docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d --no-build
 ```
 
 Acesse `http://10.10.10.208:3000/`.
