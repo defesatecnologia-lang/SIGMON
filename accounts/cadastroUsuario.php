@@ -18,8 +18,21 @@ unset($_SESSION['email_existe']);
 $db = db();
 $secretariasResult = $db->query("SELECT id, nome, sigla FROM secretarias WHERE ativo = 1 ORDER BY nome");
 $secretarias = ($secretariasResult['status'] === 'success') ? ($secretariasResult['data'] ?? []) : [];
-$secretariaSelecionada = $_SESSION['form_secretaria_id'] ?? '';
+
+$formCadastro = $_SESSION['form_cadastro'] ?? [];
+unset($_SESSION['form_cadastro']);
+
+// Compatibilidade com redirecionamentos antigos que usavam apenas esta chave.
+$secretariaSelecionada = (string)($formCadastro['secretaria_id'] ?? ($_SESSION['form_secretaria_id'] ?? ''));
 unset($_SESSION['form_secretaria_id']);
+
+$nomeSelecionado = (string)($formCadastro['nome'] ?? '');
+$usuarioSelecionado = (string)($formCadastro['usuario'] ?? '');
+$emailSelecionado = (string)($formCadastro['email'] ?? '');
+$nivelSelecionado = (string)($formCadastro['nivel_acesso'] ?? 'user');
+if (!in_array($nivelSelecionado, ['admin', 'supervisor', 'user'], true)) {
+    $nivelSelecionado = 'user';
+}
 ?>
 
 <div class="container mt-4 mb-5">
@@ -70,17 +83,17 @@ unset($_SESSION['form_secretaria_id']);
 
                         <div class="mb-3">
                             <label for="text_nome" class="form-label">Nome <span class="text-danger">*</span></label>
-                            <input type="text" id="text_nome" name="text_nome" class="form-control" placeholder="Nome completo" required maxlength="255">
+                            <input type="text" id="text_nome" name="text_nome" class="form-control" placeholder="Nome completo" value="<?= htmlspecialchars($nomeSelecionado, ENT_QUOTES, 'UTF-8') ?>" required maxlength="255">
                         </div>
 
                         <div class="mb-3">
                             <label for="text_usuario" class="form-label">Usu&aacute;rio <span class="text-danger">*</span></label>
-                            <input type="text" id="text_usuario" name="text_usuario" class="form-control" placeholder="Login de acesso" required maxlength="100" autocapitalize="none">
+                            <input type="text" id="text_usuario" name="text_usuario" class="form-control" placeholder="Login de acesso" value="<?= htmlspecialchars($usuarioSelecionado, ENT_QUOTES, 'UTF-8') ?>" required maxlength="100" autocapitalize="none">
                         </div>
 
                         <div class="mb-3">
                             <label for="text_email" class="form-label">E-mail</label>
-                            <input type="email" id="text_email" name="text_email" class="form-control" placeholder="email@exemplo.com" maxlength="150" autocomplete="off">
+                            <input type="email" id="text_email" name="text_email" class="form-control" placeholder="email@exemplo.com" value="<?= htmlspecialchars($emailSelecionado, ENT_QUOTES, 'UTF-8') ?>" maxlength="150" autocomplete="off">
                             <div class="form-text">Opcional. Usado para recuperacao de senha e envio de credenciais.</div>
                         </div>
 
@@ -95,7 +108,7 @@ unset($_SESSION['form_secretaria_id']);
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <div class="form-text">Obrigatorio para usuarios e supervisores. Administradores podem deixar em branco.</div>
+                            <div class="form-text" id="secretariaHint">Obrigatoria para usuarios e supervisores. Para administradores e opcional.</div>
                         </div>
 
                         <div class="mb-3">
@@ -115,9 +128,9 @@ unset($_SESSION['form_secretaria_id']);
                         <div class="mb-4">
                             <label for="text_nivel_acesso" class="form-label">N&iacute;vel de Acesso <span class="text-danger">*</span></label>
                             <select id="text_nivel_acesso" name="text_nivel_acesso" class="form-select" required>
-                                <option value="user">Usu&aacute;rio</option>
-                                <option value="supervisor">Supervisor</option>
-                                <option value="admin">Administrador</option>
+                                <option value="user" <?= $nivelSelecionado === 'user' ? 'selected' : '' ?>>Usu&aacute;rio</option>
+                                <option value="supervisor" <?= $nivelSelecionado === 'supervisor' ? 'selected' : '' ?>>Supervisor</option>
+                                <option value="admin" <?= $nivelSelecionado === 'admin' ? 'selected' : '' ?>>Administrador</option>
                             </select>
                         </div>
 
@@ -140,18 +153,22 @@ unset($_SESSION['form_secretaria_id']);
 (function () {
     var nivelSelect = document.getElementById('text_nivel_acesso');
     var secField = document.getElementById('text_secretaria_id');
-    var secContainer = secField ? secField.closest('.mb-3') : null;
+    var secHint = document.getElementById('secretariaHint');
 
     function atualizarObrigatoriedade() {
         if (!nivelSelect || !secField) return;
-        var nivel = nivelSelect.value;
-        if (nivel === 'admin') {
+        var isAdmin = nivelSelect.value === 'admin';
+        if (isAdmin) {
             secField.removeAttribute('required');
-            secField.value = '';
-            if (secContainer) secContainer.style.display = 'none';
         } else {
             secField.setAttribute('required', 'required');
-            if (secContainer) secContainer.style.display = '';
+        }
+        // Nunca limpar nem esconder o campo: a secretaria selecionada deve
+        // continuar valendo (inclusive para administradores).
+        if (secHint) {
+            secHint.textContent = isAdmin
+                ? 'Opcional para administradores. A secretaria selecionada sera salva.'
+                : 'Obrigatoria para usuarios e supervisores. Para administradores e opcional.';
         }
     }
     atualizarObrigatoriedade();

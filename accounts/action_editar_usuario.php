@@ -61,18 +61,39 @@ if ($secretaria_id !== '') {
     $secretaria_id = null;
 }
 
+$ativo = isset($_POST['ativo']) ? 1 : 0;
+$redefinir_senha = isset($_POST['redefinir_senha']);
+
+/**
+ * Mantem os dados preenchidos quando o formulario e reaberto por erro.
+ *
+ * @param array<string, string|int> $overrides
+ */
+$flashForm = static function (array $overrides = []) use ($id_usuario, $nome, $usuario_novo, $nivel_acesso, $secretaria_id, $ativo, $redefinir_senha): void {
+    $_SESSION['form_editar_usuario'] = array_merge([
+        'id' => (int)$id_usuario,
+        'nome' => $nome,
+        'usuario' => $usuario_novo,
+        'nivel_acesso' => $nivel_acesso,
+        'secretaria_id' => $secretaria_id === null ? '' : (string)$secretaria_id,
+        'ativo' => $ativo,
+        'redefinir_senha' => $redefinir_senha ? 1 : 0,
+    ], $overrides);
+};
+
 if ($nivel_acesso !== 'admin' && $secretaria_id === null) {
+    $flashForm();
     $_SESSION['erro_editar_usuario'] = 'Secretaria e obrigatoria para usuarios e supervisores.';
     header('Location: ?page=editarUsuario&id=' . $id_usuario);
     exit;
 }
-if ($nivel_acesso === 'admin') {
-    $secretaria_id = null;
-}
 
+// Administradores podem ter secretaria vinculada (opcional). Nao zerar o
+// valor informado: a selecao feita no formulario deve ser persistida.
 if ($secretaria_id !== null) {
     $secCheck = $db->query("SELECT id FROM secretarias WHERE id = ? AND ativo = 1 LIMIT 1", [$secretaria_id]);
     if ($secCheck['status'] !== 'success' || empty($secCheck['data'])) {
+        $flashForm(['secretaria_id' => '']);
         $_SESSION['erro_editar_usuario'] = 'Secretaria invalida ou inativa.';
         header('Location: ?page=editarUsuario&id=' . $id_usuario);
         exit;
@@ -80,6 +101,7 @@ if ($secretaria_id !== null) {
 }
 
 if (mb_strlen($nome) > 255 || mb_strlen($usuario_novo) > 100) {
+    $flashForm();
     $_SESSION['erro_editar_usuario'] = 'Nome ou usuario muito longo.';
     header('Location: ?page=editarUsuario&id=' . $id_usuario);
     exit;
@@ -92,16 +114,15 @@ if ($nivel_acesso === 'admin') {
     $nivel_acesso_id = 2;
 }
 
-$ativo = isset($_POST['ativo']) ? 1 : 0;
-$redefinir_senha = isset($_POST['redefinir_senha']);
-
 if ((int)$id_usuario === (int)$_SESSION['usuario']->id && $ativo === 0) {
+    $flashForm();
     $_SESSION['erro_editar_usuario'] = 'Voce nao pode desativar seu proprio usuario.';
     header('Location: ?page=editarUsuario&id=' . $id_usuario);
     exit;
 }
 
 if ($nome === '' || $usuario_novo === '') {
+    $flashForm();
     $_SESSION['erro_editar_usuario'] = 'Nome e usuario sao obrigatorios.';
     header('Location: ?page=editarUsuario&id=' . $id_usuario);
     exit;
@@ -111,12 +132,14 @@ $sql_verifica = "SELECT id FROM usuarios WHERE usuario = :usuario AND id != :id"
 $result_verifica = $db->query($sql_verifica, [':usuario' => $usuario_novo, ':id' => $id_usuario]);
 
 if (($result_verifica['status'] ?? 'error') !== 'success') {
+    $flashForm();
     $_SESSION['erro_editar_usuario'] = 'Erro ao validar usuario.';
     header('Location: ?page=editarUsuario&id=' . $id_usuario);
     exit;
 }
 
 if (count($result_verifica['data']) > 0) {
+    $flashForm();
     $_SESSION['erro_editar_usuario'] = 'Este nome de usuario ja esta em uso.';
     header('Location: ?page=editarUsuario&id=' . $id_usuario);
     exit;
@@ -149,10 +172,19 @@ if ($redefinir_senha) {
     ];
 }
 
-enableAuditTriggers($db, 'web');
-$result_update = $db->query($sql_update, $params_update);
+try {
+    enableAuditTriggers($db, 'web');
+    $result_update = $db->query($sql_update, $params_update);
+} catch (Throwable $ex) {
+    error_log('Erro ao atualizar usuario: ' . $ex->getMessage());
+    $flashForm();
+    $_SESSION['erro_editar_usuario'] = 'Erro ao atualizar usuario! Tente novamente.';
+    header('Location: ?page=editarUsuario&id=' . $id_usuario);
+    exit;
+}
 
 if (($result_update['status'] ?? 'error') === 'success') {
+    unset($_SESSION['form_editar_usuario']);
     $afterAudit = [
         'nome' => $nome,
         'usuario' => $usuario_novo,
@@ -174,6 +206,7 @@ if (($result_update['status'] ?? 'error') === 'success') {
         $_SESSION['senha_temporaria_exibida'] = $senhaExibida;
     }
 } else {
+    $flashForm();
     $_SESSION['erro_editar_usuario'] = 'Erro ao atualizar usuario.';
 }
 

@@ -443,7 +443,7 @@ vendor/bin/phpstan analyse
 
 | Suite | Testes | Cobertura |
 |-------|--------|-----------|
-| Unit | SecurityTest, LocaisServiceTest, AlarmeServiceTest, EquipamentoServiceTest, FileUploadValidationTest, FormValidatorTest, ManutencaoServiceTest, LookupServiceTest, RateLimiterTest, RequestValidatorTest, ApiResponseTest | Classes core, validação, segurança, lookups |
+| Unit | SecurityTest, LocaisServiceTest, AlarmeServiceTest, EquipamentoServiceTest, FileUploadValidationTest, FormValidatorTest, ManutencaoServiceTest, LookupServiceTest, RateLimiterTest, RequestValidatorTest, ApiResponseTest, MojibakeRepairTest | Classes core, validação, segurança, lookups |
 | Integration | EquipamentoServiceTest | CRUD com banco |
 | Api | AlarmeApiTest, CameraApiTest, HealthTest | Endpoints (requer servidor) |
 | Js | Vitest (`tests/Js`) | Frontend/API smoke |
@@ -471,6 +471,8 @@ php database/migrate.php --down 1
 | `2026_08_20_140000` | Relatório Diário de Turno (escala 12x36) |
 | `2026_08_31_171000` | Tabela `usuario_anotacoes` (anotações pessoais) |
 | `2026_11_12_000000` | Normalização da collation para `utf8mb4_unicode_ci` |
+| `2026_11_14_100000` | Garante `usuarios.secretaria_id` (coluna/índice/FK) em bases antigas |
+| `2026_11_14_101000` | Repara textos UTF-8 duplamente codificados (mojibake) |
 
 Parte das migrations antigas (`2026_07_10_*` a `2026_07_14_*`) já está
 incorporada ao schema principal (`config/DB/cftv_gml.sql`) e registrada na
@@ -494,6 +496,29 @@ php database/migrate.php
 php database/migrate.php --status
 # Deve mostrar: Total: N | Applied: N | Pending: 0
 ```
+
+### Reparo de mojibake (textos com acentos "duplicados")
+
+Em bases antigas, textos gravados com UTF-8 duplamente codificado aparecem como
+`AmbulÃ¢ncias` / `RegulaÃ§Ã£o`. A migration `2026_11_14_101000` corrige
+automaticamente esses valores na primeira requisição após o deploy (o
+auto-migrate roda no bootstrap). Para simular antes de aplicar, ou reexecutar
+depois:
+
+```bash
+# Simula o reparo sem gravar nada
+php scripts/repair-mojibake.php --dry-run
+
+# Aplica o reparo
+php scripts/repair-mojibake.php
+
+# Inclui também tabelas de auditoria/log (não recomendado)
+php scripts/repair-mojibake.php --all
+```
+
+Apenas valores que contêm marcadores típicos de mojibake **e** que voltam a ser
+UTF-8 válido são alterados: textos corretos (com ou sem acento) e ASCII ficam
+intactos.
 
 ## Performance
 
