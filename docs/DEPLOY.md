@@ -155,6 +155,22 @@ O script `deploy.sh`:
 Arquivos **não versionados ou ignorados** (`.env`, `DEPLOYED_VERSION`, arquivos
 criados manualmente no servidor) são preservados pelo `git reset --hard`.
 
+### Migrations automáticas no deploy
+
+As migrations pendentes são aplicadas **automaticamente na primeira requisição**
+após a atualização do container (`inc/auto_migrate.php`, protegido por
+`GET_LOCK('cftv_migrate')`). Nada precisa ser executado à mão.
+
+Exceção importante: a migration `2026_11_14_101000` repara textos gravados com
+acentos "duplicados" (`AmbulÃ¢ncias` em vez de `Ambulâncias`). Ela é conservadora
+— só altera valores que voltam a ficar UTF-8 válidos —, mas, se a base tiver
+muitos dados antigos, compile antes a simulação:
+
+```bash
+# dentro do container app (roda após a atualização, sem alterar nada)
+docker compose -f docker-compose.prod.yml exec app php scripts/repair-mojibake.php --dry-run
+```
+
 ### Sem o script
 
 ```bash

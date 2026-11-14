@@ -27,7 +27,22 @@ $usuario = $result['data'][0];
 
 $secretariasResult = $db->query("SELECT id, nome, sigla FROM secretarias WHERE ativo = 1 ORDER BY nome");
 $secretarias = ($secretariasResult['status'] === 'success') ? ($secretariasResult['data'] ?? []) : [];
-$usuarioSecretariaId = $usuario->secretaria_id ?? null;
+
+$formEdicao = $_SESSION['form_editar_usuario'] ?? [];
+unset($_SESSION['form_editar_usuario']);
+if ((int)($formEdicao['id'] ?? 0) !== (int)$usuario->id) {
+    $formEdicao = [];
+}
+
+$valorNome = (string)($formEdicao['nome'] ?? $usuario->nome);
+$valorUsuario = (string)($formEdicao['usuario'] ?? $usuario->usuario);
+$valorNivel = (string)($formEdicao['nivel_acesso'] ?? $usuario->nivel_acesso);
+if (!in_array($valorNivel, ['admin', 'supervisor', 'user'], true)) {
+    $valorNivel = 'user';
+}
+$usuarioSecretariaId = (string)($formEdicao['secretaria_id'] ?? ($usuario->secretaria_id ?? ''));
+$valorAtivo = array_key_exists('ativo', $formEdicao) ? (bool)$formEdicao['ativo'] : (bool)$usuario->ativo;
+$valorRedefinirSenha = (bool)($formEdicao['redefinir_senha'] ?? false);
 
 $mensagem_erro = $_SESSION['erro_editar_usuario'] ?? '';
 unset($_SESSION['erro_editar_usuario']);
@@ -90,13 +105,13 @@ if ($senhaTemporariaExibida !== null) {
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="nome" class="form-label">Nome Completo *</label>
-                                    <input type="text" class="form-control" id="nome" name="nome" value="<?= htmlspecialchars($usuario->nome, ENT_QUOTES, 'UTF-8') ?>" required>
+                                    <input type="text" class="form-control" id="nome" name="nome" value="<?= htmlspecialchars($valorNome, ENT_QUOTES, 'UTF-8') ?>" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="usuario" class="form-label">Nome de Usuario *</label>
-                                    <input type="text" class="form-control" id="usuario" name="usuario" value="<?= htmlspecialchars($usuario->usuario, ENT_QUOTES, 'UTF-8') ?>" required>
+                                    <input type="text" class="form-control" id="usuario" name="usuario" value="<?= htmlspecialchars($valorUsuario, ENT_QUOTES, 'UTF-8') ?>" required>
                                 </div>
                             </div>
                         </div>
@@ -105,9 +120,9 @@ if ($senhaTemporariaExibida !== null) {
                                 <div class="mb-3">
                                     <label for="nivel_acesso" class="form-label">Nivel de Acesso</label>
                                     <select class="form-select" id="nivel_acesso" name="nivel_acesso">
-                                        <option value="user" <?= $usuario->nivel_acesso === 'user' ? 'selected' : '' ?>>Usuario</option>
-                                        <option value="supervisor" <?= $usuario->nivel_acesso === 'supervisor' ? 'selected' : '' ?>>Supervisor</option>
-                                        <option value="admin" <?= $usuario->nivel_acesso === 'admin' ? 'selected' : '' ?>>Administrador</option>
+                                        <option value="user" <?= $valorNivel === 'user' ? 'selected' : '' ?>>Usuario</option>
+                                        <option value="supervisor" <?= $valorNivel === 'supervisor' ? 'selected' : '' ?>>Supervisor</option>
+                                        <option value="admin" <?= $valorNivel === 'admin' ? 'selected' : '' ?>>Administrador</option>
                                     </select>
                                 </div>
                             </div>
@@ -115,7 +130,7 @@ if ($senhaTemporariaExibida !== null) {
                                 <div class="mb-3">
                                     <label class="form-label">Status</label>
                                     <div class="form-check form-switch mt-2">
-                                        <input class="form-check-input" type="checkbox" id="ativo" name="ativo" value="1" <?= $usuario->ativo ? 'checked' : '' ?>>
+                                        <input class="form-check-input" type="checkbox" id="ativo" name="ativo" value="1" <?= $valorAtivo ? 'checked' : '' ?>>
                                         <label class="form-check-label" for="ativo">
                                             Usuario ativo
                                         </label>
@@ -136,13 +151,13 @@ if ($senhaTemporariaExibida !== null) {
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <div class="form-text">Obrigatorio para usuarios e supervisores. Administradores podem deixar em branco.</div>
+                                    <div class="form-text">Obrigatoria para usuarios e supervisores. Para administradores e opcional.</div>
                                 </div>
                             </div>
                         </div>
                         <div class="mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="redefinir_senha" name="redefinir_senha">
+                                <input class="form-check-input" type="checkbox" id="redefinir_senha" name="redefinir_senha" <?= $valorRedefinirSenha ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="redefinir_senha">
                                     <strong>Redefinir senha para temporaria</strong>
                                 </label>
@@ -188,7 +203,6 @@ if ($senhaTemporariaExibida !== null) {
 (function() {
     var selectEl = document.getElementById('nivel_acesso');
     var secFieldEdit = document.getElementById('secretaria_id');
-    var secContainerEdit = secFieldEdit ? secFieldEdit.closest('.mb-3') : null;
     var valorOriginal = '<?= htmlspecialchars($usuario->nivel_acesso ?? 'user', ENT_QUOTES, 'UTF-8') ?>';
     var modalConfirm = new bootstrap.Modal(document.getElementById('modalConfirmarRebaixar'));
     var confirmBtn = document.getElementById('btnConfirmarRebaixar');
@@ -196,13 +210,12 @@ if ($senhaTemporariaExibida !== null) {
 
     function atualizarSecretariaField() {
         if (!selectEl || !secFieldEdit) return;
+        // A secretaria e opcional para administradores, mas nunca deve ser
+        // limpa ou escondida: se o operador selecionou uma, ela sera salva.
         if (selectEl.value === 'admin') {
             secFieldEdit.removeAttribute('required');
-            secFieldEdit.value = '';
-            if (secContainerEdit) secContainerEdit.style.display = 'none';
         } else {
             secFieldEdit.setAttribute('required', 'required');
-            if (secContainerEdit) secContainerEdit.style.display = '';
         }
     }
 

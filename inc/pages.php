@@ -18,6 +18,7 @@ return [
     // MODULO: ADMIN (pasta /accounts e /resources)
     'administracao',
     'admin_tabelas',
+    'action_administracao',
     'cadastroUsuario',
     'listarUsuario',
     'editarUsuario',
@@ -35,6 +36,8 @@ return [
     'listar_locais',
     'cadastro_locais',
     'editar_locais',
+    'action_listar_locais',
+    'action_excluir_locais',
 
     // MODULO: SISTEMA DE CAMERAS (pasta /resources)
     'cadastro_cameras',
@@ -51,6 +54,7 @@ return [
     'auditoria_cameras',
     'auditoria_alarmes',
     'notificacoes',
+    'action_notificacoes',
     'relatorio_diario',
     'action_relatorio_diario',
 
